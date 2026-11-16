@@ -739,6 +739,7 @@
         <div class="tabs-bar no-print">
             <button class="tab-btn active" id="tab-btn-class" onclick="switchTeacherTab('class')">📋 Seguiment d'aula i gràfiques</button>
             <button class="tab-btn" id="tab-btn-texts" onclick="switchTeacherTab('texts')">✍️ Textos propis de projecte</button>
+            <button class="tab-btn" id="tab-btn-voice" onclick="switchTeacherTab('voice')">🗣️ Configuració de veu</button>
         </div>
 
         <div id="teacher-tab-class">
@@ -913,6 +914,45 @@
             <div class="card">
                 <h4 style="margin-bottom: 12px;">Textos personalitzats actius</h4>
                 <div id="custom-texts-list"></div>
+            </div>
+        </div>
+
+        <div id="teacher-tab-voice" style="display:none;">
+            <div class="card">
+                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">🗣️ Millora de la veu de lectura en català</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 18px;">
+                    Per evitar la veu robòtica clàssica dels ordinadors, l'aplicació selecciona automàticament les <strong>veus neurals (Alba / Enric / Google)</strong> instal·lades al navegador.
+                </p>
+
+                <div style="background: var(--primary-soft); border: 1px solid #BFDBFE; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                    <strong style="color: var(--primary); display:block; margin-bottom:6px;">💡 Truc gratuït per tenir veu 100% humana al moment:</strong>
+                    <p style="font-size: 0.88rem; color: var(--text-dark);">
+                        Obre aquest fitxer HTML amb el navegador <strong>Microsoft Edge</strong> (gratuït a Windows i Mac) o <strong>Google Chrome</strong>: inclouen de sèrie les veus neurals en català <em>Microsoft Alba Online (Natural)</em> i <em>Microsoft Enric Online (Natural)</em>, que sonen exactament com una persona real.
+                    </p>
+                    <div style="margin-top: 10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <span id="detected-voice-label" class="badge badge-blue">Detectant veu...</span>
+                        <button class="btn btn-primary btn-sm" onclick="speakCatalan('Hola! Aquesta és la nova veu natural en català per ajudar-te a llegir cada dia.')">🔊 Provar veu ara</button>
+                    </div>
+                </div>
+
+                <h4 style="font-size: 1.02rem; margin-bottom: 8px;">Opcional: Connexió amb veu neuronal d'estudi (ElevenLabs)</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Si el centre disposa d'una clau API d'ElevenLabs (té pla gratuït mensual), enganxa-la aquí per fer servir veu humana d'estudi a tots els exercicis:
+                </p>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Clau API (opcional)</label>
+                        <input type="password" id="inp-tts-key" class="form-control" placeholder="sk_...">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">ID de la veu</label>
+                        <input type="text" id="inp-tts-voice" class="form-control" placeholder="EXAVITQu4vr4xnSDxMaL">
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary btn-sm" onclick="saveVoiceSettings()">💾 Desar configuració de veu</button>
+                    <button class="btn btn-outline btn-sm" onclick="clearVoiceSettings()">Usar veu del navegador</button>
+                </div>
             </div>
         </div>
     </section>
@@ -1446,12 +1486,73 @@ function playTone(type) {
     } catch (e) {}
 }
 
-function speakCatalan(text) {
+let cachedCatalanVoice = null;
+
+function getBestCatalanVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    const caVoices = voices.filter(v =>
+        v.lang.toLowerCase().startsWith('ca') ||
+        v.name.toLowerCase().includes('catalan') ||
+        v.name.toLowerCase().includes('català')
+    );
+
+    if (caVoices.length === 0) return null;
+
+    const priorityKeywords = ['natural', 'neural', 'online', 'alba', 'enric', 'joana', 'google', 'premium', 'enhanced'];
+    for (const kw of priorityKeywords) {
+        const match = caVoices.find(v => v.name.toLowerCase().includes(kw));
+        if (match) return match;
+    }
+    return caVoices[0];
+}
+
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        cachedCatalanVoice = getBestCatalanVoice();
+    };
+}
+
+async function speakCatalan(text) {
+    if (!text) return;
+
+    if (appData.ttsApiKey && appData.ttsProvider === 'elevenlabs') {
+        try {
+            const voiceId = appData.ttsVoiceId || "EXAVITQu4vr4xnSDxMaL";
+            const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                method: 'POST',
+                headers: {
+                    'xi-api-key': appData.ttsApiKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    model_id: "eleven_multilingual_v2",
+                    voice_settings: { stability: 0.55, similarity_boost: 0.78 }
+                })
+            });
+            if (resp.ok) {
+                const blob = await resp.blob();
+                const audio = new Audio(URL.createObjectURL(blob));
+                audio.play();
+                return;
+            }
+        } catch (e) {}
+    }
+
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+        if (!cachedCatalanVoice) cachedCatalanVoice = getBestCatalanVoice();
+
         const utt = new SpeechSynthesisUtterance(text);
         utt.lang = 'ca-ES';
-        utt.rate = 0.92;
+        if (cachedCatalanVoice) {
+            utt.voice = cachedCatalanVoice;
+        }
+        utt.rate = 0.94;
+        utt.pitch = 1.04;
         window.speechSynthesis.speak(utt);
     }
 }
@@ -2640,8 +2741,11 @@ function verifyPin() {
 function switchTeacherTab(tab) {
     document.getElementById('tab-btn-class').classList.toggle('active', tab === 'class');
     document.getElementById('tab-btn-texts').classList.toggle('active', tab === 'texts');
+    document.getElementById('tab-btn-voice').classList.toggle('active', tab === 'voice');
     document.getElementById('teacher-tab-class').style.display = tab === 'class' ? 'block' : 'none';
     document.getElementById('teacher-tab-texts').style.display = tab === 'texts' ? 'block' : 'none';
+    document.getElementById('teacher-tab-voice').style.display = tab === 'voice' ? 'block' : 'none';
+    if (tab === 'voice') renderVoiceSettings();
 }
 
 function renderTeacherDashboard() {
@@ -2947,6 +3051,35 @@ function importClassData(event) {
         }
     };
     reader.readAsText(file);
+}
+
+
+function renderVoiceSettings() {
+    const v = getBestCatalanVoice();
+    const label = document.getElementById('detected-voice-label');
+    if (label) {
+        label.textContent = v ? `Veu activa: ${v.name}` : "Veu per defecte del navegador (ca-ES)";
+    }
+    document.getElementById('inp-tts-key').value = appData.ttsApiKey || "";
+    document.getElementById('inp-tts-voice').value = appData.ttsVoiceId || "EXAVITQu4vr4xnSDxMaL";
+}
+
+function saveVoiceSettings() {
+    const key = document.getElementById('inp-tts-key').value.trim();
+    const vid = document.getElementById('inp-tts-voice').value.trim() || "EXAVITQu4vr4xnSDxMaL";
+    appData.ttsApiKey = key;
+    appData.ttsProvider = key ? 'elevenlabs' : 'browser';
+    appData.ttsVoiceId = vid;
+    saveStorage();
+    alert("Configuració de veu desada!");
+}
+
+function clearVoiceSettings() {
+    appData.ttsApiKey = "";
+    appData.ttsProvider = "browser";
+    saveStorage();
+    renderVoiceSettings();
+    alert("S'ha restaurat la veu neural del navegador.");
 }
 
 initStorage();
