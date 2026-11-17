@@ -74,7 +74,7 @@
         }
 
         body.font-lligada,
-        body.font-lligada * {
+        body.font-lligada *:not(.font-opt-btn) {
             font-family: 'Playwrite ES', cursive !important;
             letter-spacing: 0em !important;
         }
@@ -93,10 +93,32 @@
         body.font-lligada .reading-passage { font-size: 1.42rem !important; }
 
         body.font-pal,
-        body.font-pal * {
+        body.font-pal *:not(.font-opt-btn) {
             font-family: 'ABeeZee', 'Lexend', sans-serif !important;
             text-transform: uppercase !important;
             letter-spacing: 0.05em !important;
+        }
+
+        #btn-font-lligada {
+            font-family: 'Playwrite ES', cursive !important;
+            text-transform: none !important;
+            letter-spacing: 0em !important;
+            font-size: 0.85rem !important;
+            padding: 4px 11px !important;
+        }
+        #btn-font-pal {
+            font-family: 'ABeeZee', 'Lexend', sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            font-size: 0.85rem !important;
+            padding: 5px 11px !important;
+        }
+        #btn-font-impremta {
+            font-family: 'Lexend', sans-serif !important;
+            text-transform: none !important;
+            letter-spacing: 0.02em !important;
+            font-size: 0.85rem !important;
+            padding: 5px 11px !important;
         }
 
         .font-selector-group {
@@ -782,10 +804,10 @@
         </div>
     </div>
     <div class="header-actions no-print">
-        <div class="font-selector-group" title="Tipus de lletra de lectura">
-            <button class="font-opt-btn active" id="btn-font-impremta" onclick="setFontStyle('impremta')" style="font-family:'Lexend',sans-serif;">Aa Impremta</button>
-            <button class="font-opt-btn" id="btn-font-pal" onclick="setFontStyle('pal')" style="font-family:'ABeeZee',sans-serif; letter-spacing:0.05em;">AA PAL</button>
-            <button class="font-opt-btn" id="btn-font-lligada" onclick="setFontStyle('lligada')" style="font-family:'Playwrite ES',cursive;">Aa Lligada</button>
+        <div class="font-selector-group" title="Tipus de lletra: Pal · Lligada · Impremta">
+            <button class="font-opt-btn" id="btn-font-pal" onclick="setFontStyle('pal')" title="Lletra de pal">Aa</button>
+            <button class="font-opt-btn" id="btn-font-lligada" onclick="setFontStyle('lligada')" title="Lletra lligada">Aa</button>
+            <button class="font-opt-btn active" id="btn-font-impremta" onclick="setFontStyle('impremta')" title="Lletra d'impremta">Aa</button>
         </div>
         <button class="btn btn-outline btn-sm" onclick="openQRScannerModal()">📷 QR</button>
         <button class="btn btn-outline btn-sm" onclick="toggleA11yBar()">👁️ Lectura fàcil</button>
