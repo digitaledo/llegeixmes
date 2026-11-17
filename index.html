@@ -591,6 +591,66 @@
             .card { border: none; box-shadow: none; padding: 0; }
         }
 
+
+        .purpose-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .purpose-item {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 0.85rem;
+        }
+        .purpose-item strong {
+            display: block;
+            color: var(--primary);
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+        .clue-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent-soft);
+            border: 1.5px solid #FDE68A;
+            color: #92400E;
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        .kiosk-banner {
+            background: #FEF3C7;
+            color: #92400E;
+            text-align: center;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-bottom: 1px solid #FDE68A;
+            display: none;
+        }
+        body.kiosk-locked .kiosk-banner { display: block; }
+        body.kiosk-locked #btn-teacher-space { display: none !important; }
+        body.kiosk-locked #btn-new-student-home { display: none !important; }
+
+        @media (max-width: 768px) {
+            header { padding: 12px 14px; }
+            main { padding: 16px 12px; }
+            .hero-banner { padding: 20px; border-radius: 16px; }
+            .hero-banner h2 { font-size: 1.35rem; }
+            .game-stage { padding: 48px 14px 24px 14px; min-height: 380px; }
+            .game-tag { top: 12px; left: 12px; font-size: 0.72rem; }
+            .speed-indicator { top: 12px; right: 12px; font-size: 0.74rem; }
+            .reading-passage { padding: 18px 16px; font-size: 1.15rem; }
+            .syl-chip { font-size: 1.15rem; padding: 10px 14px; }
+            .stat-box .value { font-size: 1.35rem; }
+        }
+
         @media (max-width: 640px) {
             .options-grid { grid-template-columns: 1fr; }
             .noise-grid { grid-template-columns: repeat(2, 1fr); }
@@ -602,6 +662,7 @@
 <body>
 
 <canvas id="confetti-canvas"></canvas>
+<div class="kiosk-banner no-print">🔒 Mode aula activat · Accés docent protegit (<span style="text-decoration:underline; cursor:pointer;" onclick="openTeacherLogin()">desbloquejar</span>)</div>
 
 <header>
     <div class="logo-area" onclick="goHome()">
@@ -615,7 +676,7 @@
         <button class="btn btn-outline btn-sm" onclick="openQRScannerModal()">📷 Escanejar carnet QR</button>
         <button class="btn btn-outline btn-sm" onclick="toggleA11yBar()">👁️ Accessibilitat</button>
         <button class="btn btn-outline btn-sm" onclick="goHome()">🏠 Aula</button>
-        <button class="btn btn-purple btn-sm" onclick="openTeacherLogin()">👩‍🏫 Espai mestres</button>
+        <button class="btn btn-purple btn-sm" id="btn-teacher-space" onclick="openTeacherLogin()">👩‍🏫 Espai mestres</button>
     </div>
 </header>
 
@@ -631,7 +692,7 @@
         <div class="hero-banner">
             <div>
                 <h2>Expedició lectora diària</h2>
-                <p>Entrenament adaptatiu amb més de 2.000 paraules catalanes, gimnàstica ocular, segmentació lèxica, mascota evolutiva, àlbum d'adhesius i carnet QR.</p>
+                <p>Millora la fluïdesa, precisió i comprensió lectora amb reptes adaptatius diaris per a Primària.</p>
             </div>
             <div class="rgpd-pill">
                 🔒 100% local · RGPD escolar
@@ -645,7 +706,7 @@
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button class="btn btn-outline" onclick="openQRScannerModal()">📷 Entrar amb QR</button>
-                <button class="btn btn-primary" onclick="openNewStudentModal()">+ Nou alumne</button>
+                <button class="btn btn-primary" id="btn-new-student-home" onclick="openNewStudentModal()">+ Nou alumne</button>
             </div>
         </div>
 
@@ -738,11 +799,33 @@
 
         <div class="tabs-bar no-print">
             <button class="tab-btn active" id="tab-btn-class" onclick="switchTeacherTab('class')">📋 Seguiment d'aula i gràfiques</button>
+            <button class="tab-btn" id="tab-btn-focus" onclick="switchTeacherTab('focus')">🎯 Entrenament a la carta (AL/PT)</button>
             <button class="tab-btn" id="tab-btn-texts" onclick="switchTeacherTab('texts')">✍️ Textos propis de projecte</button>
-            <button class="tab-btn" id="tab-btn-voice" onclick="switchTeacherTab('voice')">🗣️ Configuració de veu</button>
+            <button class="tab-btn" id="tab-btn-bulk" onclick="switchTeacherTab('bulk')">👥 Importar classe i bloqueig</button>
         </div>
 
         <div id="teacher-tab-class">
+            <div class="card no-print" style="margin-bottom: 22px;">
+                <h3 style="font-size: 1.08rem; margin-bottom: 10px;">🧭 Finalitats pedagògiques de l'eina educativa</h3>
+                <div class="purpose-grid" style="margin-bottom: 0;">
+                    <div class="purpose-item">
+                        <strong>⚡ Automatització lèxica</strong>
+                        <span>Taquistoscopi adaptatiu amb +2.000 paraules i pseudoparaules per accelerar el reconeixement visual i la ruta fonològica.</span>
+                    </div>
+                    <div class="purpose-item">
+                        <strong>👁️ Gimnàstica ocular</strong>
+                        <span>Rastreig horitzontal (sacàdics) i matrius de soroll visual per millorar la fixació i evitar salts de línia.</span>
+                    </div>
+                    <div class="purpose-item">
+                        <strong>🧩 Consciència i sintaxi</strong>
+                        <span>Segmentació sil·làbica, separació de paraules encadenades i ordenació sintàctica de frases.</span>
+                    </div>
+                    <div class="purpose-item">
+                        <strong>📊 Detecció i seguiment PI</strong>
+                        <span>Cribratge inicial automàtic, corbes de velocitat (PPM) i mapa de calor d'errors per a tutories i AL/PT.</span>
+                    </div>
+                </div>
+            </div>
             <div class="stats-row no-print">
                 <div class="stat-box">
                     <div class="label">Total alumnes</div>
@@ -917,41 +1000,78 @@
             </div>
         </div>
 
-        <div id="teacher-tab-voice" style="display:none;">
+
+        <div id="teacher-tab-focus" style="display:none;">
             <div class="card">
-                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">🗣️ Millora de la veu de lectura en català</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 18px;">
-                    Per evitar la veu robòtica clàssica dels ordinadors, l'aplicació selecciona automàticament les <strong>veus neurals (Alba / Enric / Google)</strong> instal·lades al navegador.
+                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">🎯 Entrenament focalitzat "A la carta" (Pissarra digital o suport AL/PT)</h3>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 18px;">
+                    Llança una sessió intensiva de 6 reptes centrada exclusivament en una dificultat o mecànica concreta per treballar en petit grup o a l'aula d'audició i llenguatge.
                 </p>
 
-                <div style="background: var(--primary-soft); border: 1px solid #BFDBFE; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-                    <strong style="color: var(--primary); display:block; margin-bottom:6px;">💡 Truc gratuït per tenir veu 100% humana al moment:</strong>
-                    <p style="font-size: 0.88rem; color: var(--text-dark);">
-                        Obre aquest fitxer HTML amb el navegador <strong>Microsoft Edge</strong> (gratuït a Windows i Mac) o <strong>Google Chrome</strong>: inclouen de sèrie les veus neurals en català <em>Microsoft Alba Online (Natural)</em> i <em>Microsoft Enric Online (Natural)</em>, que sonen exactament com una persona real.
-                    </p>
-                    <div style="margin-top: 10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                        <span id="detected-voice-label" class="badge badge-blue">Detectant veu...</span>
-                        <button class="btn btn-primary btn-sm" onclick="speakCatalan('Hola! Aquesta és la nova veu natural en català per ajudar-te a llegir cada dia.')">🔊 Provar veu ara</button>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                    <div>
+                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Alumne (o sessió de demostració)</label>
+                        <select id="focus-student-select" class="form-control"></select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Objectiu específic a entrenar</label>
+                        <select id="focus-topic-select" class="form-control">
+                            <option value="bdpq">Discriminació visual b / d / p / q</option>
+                            <option value="travades">Grups consonàntics travats (br, bl, pr, pl, tr, dr...)</option>
+                            <option value="digrafs">Dígrafs i ortografia (ny, ll, ix, tx, l·l, g/j)</option>
+                            <option value="pseudo">Pseudoparaules (ruta fonològica pura)</option>
+                            <option value="chains">Paraules encadenades (segmentació lèxica)</option>
+                            <option value="sentences">Tren de frases (construcció sintàctica)</option>
+                            <option value="ocular">Gimnàstica ocular (sacàdics i soroll visual)</option>
+                        </select>
                     </div>
                 </div>
 
-                <h4 style="font-size: 1.02rem; margin-bottom: 8px;">Opcional: Connexió amb veu neuronal d'estudi (ElevenLabs)</h4>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
-                    Si el centre disposa d'una clau API d'ElevenLabs (té pla gratuït mensual), enganxa-la aquí per fer servir veu humana d'estudi a tots els exercicis:
+                <button class="btn btn-primary" onclick="startFocusedSession()">🚀 Iniciar sessió focalitzada ara</button>
+            </div>
+        </div>
+
+        <div id="teacher-tab-bulk" style="display:none;">
+            <div class="card" style="margin-bottom: 22px;">
+                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">👥 Importació massiva d'alumnes (Llista de classe)</h3>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+                    Enganxa una llista de noms (un per línia, ex. des d'un full de càlcul o Esfera). Per complir el RGPD, recomanem posar només nom i inicial del cognom.
                 </p>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
                     <div>
-                        <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">Clau API (opcional)</label>
-                        <input type="password" id="inp-tts-key" class="form-control" placeholder="sk_...">
+                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Curs del grup</label>
+                        <select id="bulk-grade-select" class="form-control">
+                            <option value="1r de primària">1r de primària</option>
+                            <option value="2n de primària">2n de primària</option>
+                            <option value="3r de primària">3r de primària</option>
+                            <option value="4t de primària">4t de primària</option>
+                            <option value="5è de primària">5è de primària</option>
+                            <option value="6è de primària">6è de primària</option>
+                        </select>
                     </div>
                     <div>
-                        <label style="display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px;">ID de la veu</label>
-                        <input type="text" id="inp-tts-voice" class="form-control" placeholder="EXAVITQu4vr4xnSDxMaL">
+                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Mode d'inici per a tots</label>
+                        <select id="bulk-start-mode" class="form-control">
+                            <option value="screening">🩺 Test de cribratge inicial (Sessió 0)</option>
+                            <option value="direct">🚀 Assignació directa segons el curs</option>
+                        </select>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary btn-sm" onclick="saveVoiceSettings()">💾 Desar configuració de veu</button>
-                    <button class="btn btn-outline btn-sm" onclick="clearVoiceSettings()">Usar veu del navegador</button>
+                <div class="form-group">
+                    <label>Llista d'alumnes (un nom per línia)</label>
+                    <textarea id="bulk-names-textarea" class="form-control" rows="6" placeholder="Exemple:&#10;Biel R.&#10;Laia M.&#10;Marc G.&#10;Ona P."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="importBulkStudents()">➕ Crear tots els perfils de la llista</button>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">🔒 Mode bloqueig d'aula (Mode Quiosc)</h3>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+                    Quan actives el mode aula, s'oculten els botons d'administració (<em>Espai mestres</em> i <em>+ Nou alumne</em>) de la pantalla principal perquè els infants no puguin modificar perfils durant la sessió. Per tornar a entrar al panell docent, només caldrà clicar l'enllaç <em>desbloquejar</em> de la barra superior.
+                </p>
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn btn-amber" id="btn-toggle-kiosk" onclick="toggleKioskMode()">🔒 Activar mode bloqueig d'aula</button>
+                    <span id="kiosk-state-label" style="font-size:0.86rem; font-weight:600; color:var(--text-muted);">Estat actual: Desactivat</span>
                 </div>
             </div>
         </div>
@@ -1486,77 +1606,6 @@ function playTone(type) {
     } catch (e) {}
 }
 
-let cachedCatalanVoice = null;
-
-function getBestCatalanVoice() {
-    if (!('speechSynthesis' in window)) return null;
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return null;
-
-    const caVoices = voices.filter(v =>
-        v.lang.toLowerCase().startsWith('ca') ||
-        v.name.toLowerCase().includes('catalan') ||
-        v.name.toLowerCase().includes('català')
-    );
-
-    if (caVoices.length === 0) return null;
-
-    const priorityKeywords = ['natural', 'neural', 'online', 'alba', 'enric', 'joana', 'google', 'premium', 'enhanced'];
-    for (const kw of priorityKeywords) {
-        const match = caVoices.find(v => v.name.toLowerCase().includes(kw));
-        if (match) return match;
-    }
-    return caVoices[0];
-}
-
-if ('speechSynthesis' in window) {
-    window.speechSynthesis.onvoiceschanged = () => {
-        cachedCatalanVoice = getBestCatalanVoice();
-    };
-}
-
-async function speakCatalan(text) {
-    if (!text) return;
-
-    if (appData.ttsApiKey && appData.ttsProvider === 'elevenlabs') {
-        try {
-            const voiceId = appData.ttsVoiceId || "EXAVITQu4vr4xnSDxMaL";
-            const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-                method: 'POST',
-                headers: {
-                    'xi-api-key': appData.ttsApiKey,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    text: text,
-                    model_id: "eleven_multilingual_v2",
-                    voice_settings: { stability: 0.55, similarity_boost: 0.78 }
-                })
-            });
-            if (resp.ok) {
-                const blob = await resp.blob();
-                const audio = new Audio(URL.createObjectURL(blob));
-                audio.play();
-                return;
-            }
-        } catch (e) {}
-    }
-
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        if (!cachedCatalanVoice) cachedCatalanVoice = getBestCatalanVoice();
-
-        const utt = new SpeechSynthesisUtterance(text);
-        utt.lang = 'ca-ES';
-        if (cachedCatalanVoice) {
-            utt.voice = cachedCatalanVoice;
-        }
-        utt.rate = 0.94;
-        utt.pitch = 1.04;
-        window.speechSynthesis.speak(utt);
-    }
-}
-
 function renderHomeStudents() {
     const grid = document.getElementById('students-grid');
     grid.innerHTML = "";
@@ -1592,8 +1641,6 @@ function renderHomeStudents() {
         card.className = 'student-card';
         card.onclick = () => {
             applyStudentA11y(st);
-            const firstName = st.name.split(' ')[0];
-            speakCatalan(`Hola ${firstName}! Som-hi amb el repte d'avui!`);
             if (!st.screened) startScreeningTest(st.id);
             else startSession(st.id);
         };
@@ -2069,6 +2116,93 @@ function renderVisualNoiseStep(step) {
     });
 }
 
+
+const WORD_VISUAL_CLUES = {
+    "boca": "👄 Part de la cara per menjar i parlar",
+    "dit": "☝️ En tenim cinc a cada mà",
+    "pilota": "⚽ Joguina rodona per botar i xutar",
+    "poma": "🍎 Fruita vermella o verda",
+    "casa": "🏠 Lloc on vivim amb la família",
+    "mapa": "🗺️ Dibuix dels països i carreteres",
+    "nena": "👧 Infanta, noia jove",
+    "sabata": "👟 Calçat per posar als peus",
+    "cadira": "🪑 Moble per seure",
+    "taula": "🪵 Moble pla on mengem o escrivim",
+    "lluna": "🌙 Satèl·lit que brilla de nit",
+    "sol": "☀️ Estrella que ens escalfa de dia",
+    "gos": "🐶 Animal de companyia que lladra",
+    "gat": "🐱 Animal pelut que miola",
+    "moto": "🏍️ Vehicle de dues rodes amb motor",
+    "foca": "🦭 Animal marí amb bigotis",
+    "patata": "🥔 Tubercle per fer truita o fregides",
+    "balena": "🐋 Mamífer marí gegant",
+    "pirata": "🏴‍☠️ Navegant que busca tresors",
+    "dau": "🎲 Cub amb punts per jugar",
+    "arbre": "🌳 Planta gran amb tronc i fulles",
+    "espelma": "🕯️ Dona llum amb una flama",
+    "formiga": "🐜 Insecte petit i molt treballador",
+    "pastís": "🎂 Dolç d'aniversari",
+    "armari": "🚪 Moble per guardar la roba",
+    "escola": "🏫 Lloc on anem a aprendre",
+    "llapis": "✏️ Eina de fusta per escriure",
+    "castell": "🏰 Edifici antic amb torres i muralles",
+    "porta": "🚪 Obertura per entrar a una habitació",
+    "finestra": "🪟 Obertura per mirar al carrer",
+    "martell": "🔨 Eina per clavar claus",
+    "elefant": "🐘 Animal gris molt gran amb trompa",
+    "cargol": "🐌 Animal petit que porta la casa a sobre",
+    "tardor": "🍂 Estació en què cauen les fulles",
+    "brúixola": "🧭 Aparell que assenyala el nord",
+    "plàtan": "🍌 Fruita groga i allargada",
+    "drac": "🐉 Animal fantàstic que treu foc",
+    "estrella": "⭐ Punt lluminós al cel nocturn",
+    "bicicleta": "🚲 Vehicle de dues rodes amb pedals",
+    "granota": "🐸 Animal verd que salta i rauca",
+    "tren": "🚂 Transport llarg que va sobre vies",
+    "biblioteca": "📚 Sala plena de llibres per llegir",
+    "princesa": "👸 Filla del rei i la reina",
+    "cocodril": "🐊 Rèptil verd de riu amb dents grans",
+    "flauta": "🎶 Instrument musical de vent",
+    "quadern": "📓 Llibreta per escriure i dibuixar",
+    "pingüí": "🐧 Ocell blanc i negre que viu al gel",
+    "trompeta": "🎺 Instrument musical daurat de vent",
+    "cristall": "💎 Vidre molt transparent i brillant",
+    "muntanya": "⛰️ Elevació molt alta del terreny",
+    "papallona": "🦋 Insecte amb ales de colors",
+    "calaix": "🗄️ Compartiment que s'obre dins un moble",
+    "cotxe": "🚗 Vehicle de quatre rodes",
+    "pel·lícula": "🎬 Història que mirem al cinema",
+    "girafa": "🦒 Animal d'Àfrica amb el coll molt llarg",
+    "formatge": "🧀 Aliment fet amb llet",
+    "rellotge": "⌚ Aparell que marca les hores",
+    "goril·la": "🦍 Simi molt gran i fort",
+    "castanya": "🌰 Fruit sec típic de la tardor",
+    "motxilla": "🎒 Bossa per portar els llibres a l'esquena",
+    "vaixell": "🚢 Transport gran que navega pel mar",
+    "carbassa": "🎃 Hortalissa gran i taronja",
+    "aranya": "🕷️ Animal de vuit potes que fa teranyines",
+    "platja": "🏖️ Vora del mar amb sorra",
+    "abella": "🐝 Insecte que fabrica mel",
+    "extraordinari": "✨ Que surt del que és habitual, magnífic",
+    "espectacular": "🎆 Que crida molt l'atenció per la seva bellesa",
+    "investigació": "🔬 Recerca per descobrir coses noves",
+    "biodiversitat": "🌍 Varietat d'éssers vius d'un planeta",
+    "constel·lació": "🌌 Grup d'estrelles que formen una figura",
+    "temperatura": "🌡️ Grau de calor o fred d'un cos",
+    "electricitat": "⚡ Energia que fa funcionar els llums",
+    "arquitectura": "🏛️ Art de dissenyar i construir edificis",
+    "astronauta": "🧑‍🚀 Persona que viatja a l'espai",
+    "laboratori": "🧪 Espai equipat per fer experiments",
+    "experiment": "⚗️ Prova científica per comprovar una idea",
+    "fotosíntesi": "🌱 Procés pel qual les plantes fan aliment amb el sol",
+    "mediterrani": "🌊 Mar que banya la costa catalana"
+};
+
+function getVisualClue(word, tag) {
+    if (WORD_VISUAL_CLUES[word]) return WORD_VISUAL_CLUES[word];
+    return `💡 Pista (${tag || 'paraula'}) · ${word.length} lletres`;
+}
+
 function renderSyllableStep(step) {
     const stage = document.getElementById('game-stage');
     const shuffled = [...step.syl].sort(() => Math.random() - 0.5);
@@ -2077,10 +2211,11 @@ function renderSyllableStep(step) {
     }
     let selectedIndices = [];
 
+    const clueText = getVisualClue(step.word, step.tag);
     stage.innerHTML = `
         <span class="game-tag">🧩 Caçador de síl·labes</span>
-        <button class="btn btn-outline btn-sm speed-indicator" onclick="speakCatalan('${step.word}')">🔊 Escoltar</button>
         <p style="color:var(--text-muted); margin-top:18px;">Ordena les síl·labes per construir la paraula:</p>
+        <div class="clue-badge">${clueText}</div>
         <div id="syl-slots" class="syllable-slots"></div>
         <div id="syl-pool" class="syllable-pool"></div>
         <div style="display:flex; gap:10px; margin-top:8px;">
@@ -2090,7 +2225,6 @@ function renderSyllableStep(step) {
         <div id="step-feedback" class="feedback-toast"></div>
     `;
 
-    speakCatalan(step.word);
     const slotsEl = document.getElementById('syl-slots');
     const poolEl = document.getElementById('syl-pool');
 
@@ -2401,7 +2535,6 @@ function renderProsodyRecorderStep(passage) {
 
         <div class="recorder-box">
             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:12px;">
-                <button class="btn btn-outline btn-sm" onclick="speakCatalan('${firstSentence.replace(/'/g, "\'")}')">🔊 Escoltar model</button>
                 <button class="btn btn-primary btn-sm" id="btn-rec-start">🎙️ Gravar la meva veu</button>
                 <button class="btn btn-danger-soft btn-sm" id="btn-rec-stop" style="display:none;"><span class="rec-pulse"></span> Aturar gravació</button>
             </div>
@@ -2739,13 +2872,14 @@ function verifyPin() {
 }
 
 function switchTeacherTab(tab) {
-    document.getElementById('tab-btn-class').classList.toggle('active', tab === 'class');
-    document.getElementById('tab-btn-texts').classList.toggle('active', tab === 'texts');
-    document.getElementById('tab-btn-voice').classList.toggle('active', tab === 'voice');
-    document.getElementById('teacher-tab-class').style.display = tab === 'class' ? 'block' : 'none';
-    document.getElementById('teacher-tab-texts').style.display = tab === 'texts' ? 'block' : 'none';
-    document.getElementById('teacher-tab-voice').style.display = tab === 'voice' ? 'block' : 'none';
-    if (tab === 'voice') renderVoiceSettings();
+    ['class', 'focus', 'texts', 'bulk'].forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        const panel = document.getElementById('teacher-tab-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
+        if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    });
+    if (tab === 'focus') populateFocusStudentsSelect();
+    if (tab === 'bulk') updateKioskUI();
 }
 
 function renderTeacherDashboard() {
@@ -3054,35 +3188,169 @@ function importClassData(event) {
 }
 
 
-function renderVoiceSettings() {
-    const v = getBestCatalanVoice();
-    const label = document.getElementById('detected-voice-label');
-    if (label) {
-        label.textContent = v ? `Veu activa: ${v.name}` : "Veu per defecte del navegador (ca-ES)";
+
+function applyKioskState() {
+    document.body.classList.toggle('kiosk-locked', !!appData.kioskMode);
+}
+
+function updateKioskUI() {
+    const btn = document.getElementById('btn-toggle-kiosk');
+    const lbl = document.getElementById('kiosk-state-label');
+    if (!btn || !lbl) return;
+    if (appData.kioskMode) {
+        btn.textContent = "🔓 Desactivar mode bloqueig d'aula";
+        lbl.textContent = "Estat actual: Activat (botons docents ocults a l'aula)";
+    } else {
+        btn.textContent = "🔒 Activar mode bloqueig d'aula";
+        lbl.textContent = "Estat actual: Desactivat";
     }
-    document.getElementById('inp-tts-key').value = appData.ttsApiKey || "";
-    document.getElementById('inp-tts-voice').value = appData.ttsVoiceId || "EXAVITQu4vr4xnSDxMaL";
 }
 
-function saveVoiceSettings() {
-    const key = document.getElementById('inp-tts-key').value.trim();
-    const vid = document.getElementById('inp-tts-voice').value.trim() || "EXAVITQu4vr4xnSDxMaL";
-    appData.ttsApiKey = key;
-    appData.ttsProvider = key ? 'elevenlabs' : 'browser';
-    appData.ttsVoiceId = vid;
+function toggleKioskMode() {
+    appData.kioskMode = !appData.kioskMode;
     saveStorage();
-    alert("Configuració de veu desada!");
+    applyKioskState();
+    updateKioskUI();
 }
 
-function clearVoiceSettings() {
-    appData.ttsApiKey = "";
-    appData.ttsProvider = "browser";
+function importBulkStudents() {
+    const raw = document.getElementById('bulk-names-textarea').value;
+    const grade = document.getElementById('bulk-grade-select').value;
+    const startMode = document.getElementById('bulk-start-mode').value;
+    const avatars = ["🦊", "🦉", "🐢", "🐬", "🦁", "🐼", "🚀", "🦄"];
+
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length === 0) {
+        alert("Enganxa com a mínim un nom d'alumne.");
+        return;
+    }
+
+    let phase = 1, speed = 1350;
+    if (grade.startsWith("2n")) { phase = 2; speed = 1200; }
+    else if (grade.startsWith("3r")) { phase = 3; speed = 1050; }
+    else if (grade.startsWith("4t")) { phase = 4; speed = 950; }
+    else if (grade.startsWith("5è") || grade.startsWith("6è")) { phase = 5; speed = 850; }
+
+    let created = 0;
+    lines.forEach((name, idx) => {
+        const exists = appData.students.some(s => s.name.toLowerCase() === name.toLowerCase() && s.grade === grade);
+        if (!exists) {
+            appData.students.push({
+                id: "st_" + Date.now() + "_" + idx,
+                name,
+                grade,
+                avatar: avatars[(appData.students.length + idx) % avatars.length],
+                phase,
+                tachSpeed: speed,
+                xp: 0,
+                streakDays: 1,
+                stickers: [],
+                screened: startMode === "direct",
+                a11yProfile: "none",
+                phonemeStats: {},
+                sessions: []
+            });
+            created++;
+        }
+    });
+
     saveStorage();
-    renderVoiceSettings();
-    alert("S'ha restaurat la veu neural del navegador.");
+    document.getElementById('bulk-names-textarea').value = "";
+    renderTeacherDashboard();
+    alert(`S'han creat ${created} perfils d'alumnes correctament!`);
+}
+
+function populateFocusStudentsSelect() {
+    const sel = document.getElementById('focus-student-select');
+    if (!sel) return;
+    sel.innerHTML = `<option value="demo">🎓 Sessió de demostració (Pissarra digital)</option>`;
+    appData.students.forEach(st => {
+        sel.innerHTML += `<option value="${st.id}">${st.avatar} ${st.name} (${st.grade} · Fase ${st.phase})</option>`;
+    });
+}
+
+function startFocusedSession() {
+    const stId = document.getElementById('focus-student-select').value;
+    const topic = document.getElementById('focus-topic-select').value;
+
+    let st = appData.students.find(s => s.id === stId);
+    let isDemo = false;
+    if (!st) {
+        isDemo = true;
+        st = {
+            id: "demo_st",
+            name: "Grup Classe",
+            grade: "Primària",
+            avatar: "🎓",
+            phase: 3,
+            tachSpeed: 1050,
+            xp: 0,
+            stickers: [],
+            phonemeStats: {},
+            sessions: []
+        };
+    }
+    currentStudent = st;
+    const phase = st.phase || 3;
+    const steps = [];
+
+    if (topic === 'bdpq') {
+        const pool = LEXICON_DB[1].filter(x => x.tag.includes('b/d') || x.tag.includes('p/q')).sort(() => Math.random() - 0.5).slice(0, 6);
+        pool.forEach(item => steps.push({ type: 'flash', word: item.w, tag: item.tag }));
+    } else if (topic === 'travades') {
+        const pool = LEXICON_DB[3].filter(x => x.tag.includes('Travades')).sort(() => Math.random() - 0.5).slice(0, 6);
+        pool.forEach((item, i) => steps.push({ type: i % 2 === 0 ? 'flash' : 'syllables', word: item.w, syl: item.syl, tag: item.tag }));
+    } else if (topic === 'digrafs') {
+        const pool = LEXICON_DB[4].sort(() => Math.random() - 0.5).slice(0, 6);
+        pool.forEach((item, i) => steps.push({ type: i % 2 === 0 ? 'flash' : 'syllables', word: item.w, syl: item.syl, tag: item.tag }));
+    } else if (topic === 'pseudo') {
+        for (let i = 0; i < 6; i++) {
+            steps.push({ type: 'flash', word: generatePseudoword(phase), tag: "Pseudoparaules (ruta fonològica)", isPseudo: true });
+        }
+    } else if (topic === 'chains') {
+        const chains = [...CHAIN_WORDS_DB[phase], ...CHAIN_WORDS_DB[Math.min(5, phase + 1)]];
+        for (let i = 0; i < 5; i++) {
+            steps.push({ type: 'word_chain', chain: chains[i % chains.length], tag: "Segmentació lèxica" });
+        }
+    } else if (topic === 'sentences') {
+        const sents = [...SENTENCE_SCRAMBLE_DB[phase], ...SENTENCE_SCRAMBLE_DB[Math.min(5, phase + 1)]];
+        for (let i = 0; i < 5; i++) {
+            steps.push({ type: 'sentence_scramble', words: sents[i % sents.length], tag: "Construcció sintàctica" });
+        }
+    } else if (topic === 'ocular') {
+        const pool = LEXICON_DB[phase].sort(() => Math.random() - 0.5).slice(0, 6);
+        pool.forEach((item, i) => steps.push({ type: i % 2 === 0 ? 'saccadic' : 'visual_noise', word: item.w, tag: "Gimnàstica ocular" }));
+    }
+
+    sessionState = {
+        isScreening: isDemo,
+        steps,
+        currentIndex: 0,
+        correctCount: 0,
+        totalQuestions: 0,
+        levelHits: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        currentSpeed: st.tachSpeed,
+        streak: 0,
+        combo: 0,
+        errorQueue: [],
+        inRecoveryMode: false,
+        recoveredCount: 0,
+        initialErrorCount: 0,
+        measuredPPM: PHASES_INFO[phase].expectedPPM,
+        prosodyRating: "Sessió focalitzada"
+    };
+
+    document.getElementById('ses-avatar').textContent = st.avatar;
+    document.getElementById('ses-student-name').textContent = st.name;
+    document.getElementById('ses-phase-badge').textContent = "🎯 Sessió focalitzada";
+    updateComboUI();
+
+    switchView('view-session');
+    renderCurrentStep();
 }
 
 initStorage();
+applyKioskState();
 renderHomeStudents();
 </script>
 
