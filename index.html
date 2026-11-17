@@ -658,6 +658,7 @@
             .chain-box { font-size: 1.5rem; }
         }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
 
@@ -1158,15 +1159,22 @@
 <div id="modal-qr-scan" class="modal-backdrop">
     <div class="modal-box" style="text-align:center;">
         <h3 style="font-size:1.3rem; margin-bottom:6px;">Carregar perfil amb carnet QR</h3>
-        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;">Enfoca el codi QR del carnet a la càmera o enganxa el codi de sincronització.</p>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;">Enfoca el codi QR del carnet a la càmera, fes-li una foto o enganxa el codi.</p>
         <div id="qr-video-wrap" style="margin-bottom:14px;">
-            <video id="qr-video" style="width:100%; max-width:340px; border-radius:12px; background:#0F172A; display:none;" playsinline></video>
-            <button class="btn btn-primary btn-sm" id="btn-start-cam" onclick="startQRCamera()">📷 Activar càmera per escanejar</button>
-            <p id="qr-cam-status" style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;"></p>
+            <video id="qr-video" style="width:100%; max-width:320px; border-radius:12px; background:#0F172A; display:none; margin:0 auto;" playsinline muted></video>
+            <canvas id="qr-canvas" style="display:none;"></canvas>
+            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px;">
+                <button class="btn btn-primary btn-sm" id="btn-start-cam" onclick="startQRCamera()">📷 Vídeo en directe</button>
+                <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0;">
+                    📸 Fer foto / imatge QR
+                    <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="decodeQRFromImageFile(event)">
+                </label>
+            </div>
+            <p id="qr-cam-status" style="font-size:0.82rem; color:var(--text-muted); margin-top:8px;"></p>
         </div>
         <div class="form-group" style="text-align:left;">
             <label>O enganxa aquí el codi del carnet:</label>
-            <input type="text" id="inp-qr-code" class="form-control" placeholder="Enganxa el codi LM-QR...">
+            <input type="text" id="inp-qr-code" class="form-control" placeholder="Enganxa el codi LMQR:...">
         </div>
         <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
             <button class="btn btn-outline" onclick="closeQRScanner()">Cancel·lar</button>
@@ -2778,32 +2786,85 @@ function closeQRScanner() {
 
 async function startQRCamera() {
     const video = document.getElementById('qr-video');
+    const canvas = document.getElementById('qr-canvas');
     const status = document.getElementById('qr-cam-status');
     try {
-        qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        qrStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } }
+        });
         video.srcObject = qrStream;
+        video.setAttribute("playsinline", true);
         video.style.display = "block";
         document.getElementById('btn-start-cam').style.display = "none";
         await video.play();
 
+        status.textContent = "🔍 Enfoca el codi QR dins la càmera...";
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        let nativeDetector = null;
         if ('BarcodeDetector' in window) {
-            const detector = new BarcodeDetector({ formats: ['qr_code'] });
-            status.textContent = "Enfoca el codi QR davant la càmera...";
-            qrScanTimer = setInterval(async () => {
-                try {
-                    const barcodes = await detector.detect(video);
+            try { nativeDetector = new BarcodeDetector({ formats: ['qr_code'] }); } catch (e) {}
+        }
+
+        qrScanTimer = setInterval(async () => {
+            if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+            try {
+                if (nativeDetector) {
+                    const barcodes = await nativeDetector.detect(video);
                     if (barcodes.length > 0 && barcodes[0].rawValue.startsWith("LMQR:")) {
                         document.getElementById('inp-qr-code').value = barcodes[0].rawValue;
                         importFromQRString();
+                        return;
                     }
-                } catch (e) {}
-            }, 450);
-        } else {
-            status.textContent = "Càmera activa. Si el navegador no llegeix QR automàticament, enganxa el codi a sota.";
-        }
+                }
+                if (typeof jsQR === 'function') {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: "attemptBoth" });
+                    if (code && code.data && code.data.startsWith("LMQR:")) {
+                        document.getElementById('inp-qr-code').value = code.data;
+                        importFromQRString();
+                    }
+                }
+            } catch (e) {}
+        }, 300);
     } catch (err) {
-        status.textContent = "⚠️ No s'ha pogut accedir a la càmera. Enganxa el codi del carnet a sota.";
+        status.textContent = "⚠️ El navegador no permet vídeo directe aquí. Fes servir el botó '📸 Fer foto / imatge QR' o enganxa el codi.";
     }
+}
+
+function decodeQRFromImageFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('qr-cam-status');
+    status.textContent = "⏳ Llegint el codi QR de la imatge...";
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.getElementById('qr-canvas');
+            const ctx = canvas.getContext('2d');
+            const scale = Math.min(1, 900 / Math.max(img.width, img.height));
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            if (typeof jsQR === 'function') {
+                const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: "attemptBoth" });
+                if (code && code.data && code.data.startsWith("LMQR:")) {
+                    document.getElementById('inp-qr-code').value = code.data;
+                    status.textContent = "✅ Codi QR detectat!";
+                    importFromQRString();
+                    return;
+                }
+            }
+            status.textContent = "⚠️ No s'ha pogut detectar cap codi QR vàlid a la imatge. Prova d'apropar més la càmera i enfocar bé.";
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 function importFromQRString() {
