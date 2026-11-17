@@ -6,7 +6,7 @@
     <title>Llegeix més escola · Plataforma lectora de primària</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Lexend:wght@300;400;500;600;700;800&family=Playwrite+ES:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&family=Lexend:wght@300;400;500;600;700;800&family=Playwrite+ES:wght@100..400&family=Schoolbell&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-main: #F8FAFC;
@@ -64,15 +64,20 @@
         }
 
         body.font-pal {
-            --font-active: 'Fredoka', 'Lexend', sans-serif;
+            --font-active: 'ABeeZee', 'Lexend', sans-serif;
             --text-transform-active: uppercase;
         }
 
         body.font-lligada {
-            --font-active: 'Playwrite ES', 'Patrick Hand', cursive;
+            --font-active: 'Playwrite ES', cursive;
             --text-transform-active: none;
         }
 
+        body.font-lligada,
+        body.font-lligada * {
+            font-family: 'Playwrite ES', cursive !important;
+            letter-spacing: 0em !important;
+        }
         body.font-lligada .flash-box,
         body.font-lligada .saccadic-word,
         body.font-lligada .noise-cell,
@@ -81,16 +86,17 @@
         body.font-lligada .chain-box,
         body.font-lligada .reading-passage,
         body.font-lligada .comp-btn {
-            font-family: 'Playwrite ES', cursive !important;
-            line-height: 2.15 !important;
-            letter-spacing: 0.01em !important;
+            line-height: 2.25 !important;
+            font-size: 1.15em;
         }
+        body.font-lligada .flash-box { font-size: 2.6rem !important; }
+        body.font-lligada .reading-passage { font-size: 1.42rem !important; }
 
         body.font-pal,
         body.font-pal * {
-            font-family: 'Fredoka', 'Lexend', sans-serif !important;
+            font-family: 'ABeeZee', 'Lexend', sans-serif !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.03em !important;
+            letter-spacing: 0.05em !important;
         }
 
         .font-selector-group {
@@ -778,7 +784,7 @@
     <div class="header-actions no-print">
         <div class="font-selector-group" title="Tipus de lletra de lectura">
             <button class="font-opt-btn active" id="btn-font-impremta" onclick="setFontStyle('impremta')" style="font-family:'Lexend',sans-serif;">Aa Impremta</button>
-            <button class="font-opt-btn" id="btn-font-pal" onclick="setFontStyle('pal')" style="font-family:'Fredoka',sans-serif;">AA PAL</button>
+            <button class="font-opt-btn" id="btn-font-pal" onclick="setFontStyle('pal')" style="font-family:'ABeeZee',sans-serif; letter-spacing:0.05em;">AA PAL</button>
             <button class="font-opt-btn" id="btn-font-lligada" onclick="setFontStyle('lligada')" style="font-family:'Playwrite ES',cursive;">Aa Lligada</button>
         </div>
         <button class="btn btn-outline btn-sm" onclick="openQRScannerModal()">📷 QR</button>
