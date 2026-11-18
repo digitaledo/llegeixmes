@@ -789,6 +789,7 @@
         }
     </style>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -812,6 +813,7 @@
         <button class="btn btn-outline btn-sm" onclick="openQRScannerModal()">📷 QR</button>
         <button class="btn btn-outline btn-sm" onclick="toggleA11yBar()">👁️ Lectura fàcil</button>
         <button class="btn btn-outline btn-sm" onclick="goHome()">🏠 Aula</button>
+        <span id="cloud-status-pill" class="badge badge-blue" style="display:none; cursor:pointer;" onclick="syncNowFromCloud()" title="Estat sincronització núvol">☁️ Connectat</span>
         <button class="btn btn-purple btn-sm" id="btn-teacher-space" onclick="openTeacherLogin()">👩‍🏫 Mestres</button>
     </div>
 </header>
@@ -938,6 +940,7 @@
             <button class="tab-btn" id="tab-btn-focus" onclick="switchTeacherTab('focus')">🎯 Entrenament a la carta (AL/PT)</button>
             <button class="tab-btn" id="tab-btn-texts" onclick="switchTeacherTab('texts')">✍️ Textos propis de projecte</button>
             <button class="tab-btn" id="tab-btn-bulk" onclick="switchTeacherTab('bulk')">👥 Importar classe i bloqueig</button>
+            <button class="tab-btn" id="tab-btn-cloud" onclick="switchTeacherTab('cloud')">☁️ Compte privat i núvol</button>
         </div>
 
         <div id="teacher-tab-class">
@@ -1209,6 +1212,63 @@
                     <button class="btn btn-amber" id="btn-toggle-kiosk" onclick="toggleKioskMode()">🔒 Activar mode bloqueig d'aula</button>
                     <span id="kiosk-state-label" style="font-size:0.86rem; font-weight:600; color:var(--text-muted);">Estat actual: Desactivat</span>
                 </div>
+            </div>
+        </div>
+
+        <div id="teacher-tab-cloud" style="display:none;">
+            <div class="card" style="margin-bottom: 22px;">
+                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">☁️ Sincronització al núvol privat (Supabase)</h3>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Inicia sessió amb el teu usuari privat de docent o d'escola. Tots els perfils dels alumnes, les seves puntuacions, adhesius i textos d'aula es desaran automàticament al teu espai privat i se sincronitzaran entre totes les tauletes i ordinadors on hagis iniciat sessió.
+                </p>
+
+                <div id="cloud-logged-out-box">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                        <div>
+                            <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Correu electrònic docent / aula</label>
+                            <input type="email" id="sb-email" class="form-control" placeholder="mestre@escola.cat">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Contrasenya privada (mínim 6 caràcters)</label>
+                            <input type="password" id="sb-password" class="form-control" placeholder="••••••••" onkeyup="if(event.key==='Enter') cloudSignIn()">
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="cloudSignIn()">🔑 Iniciar sessió i sincronitzar</button>
+                        <button class="btn btn-outline" onclick="cloudSignUp()">✨ Crear nou usuari privat</button>
+                    </div>
+                    <p id="sb-auth-msg" style="font-size:0.86rem; margin-top:10px; font-weight:600;"></p>
+                </div>
+
+                <div id="cloud-logged-in-box" style="display:none; background: var(--secondary-soft); border: 1.5px solid #A7F3D0; border-radius: 14px; padding: 18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <span class="badge badge-green">🟢 Sessió privada activa</span>
+                            <div style="font-weight:700; font-size:1.05rem; margin-top:4px;" id="sb-user-email-display">usuari@escola.cat</div>
+                            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;" id="sb-last-sync-display">Última sincronització: ara mateix</div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="syncNowFromCloud(true)">🔄 Sincronitzar ara</button>
+                            <button class="btn btn-danger-soft btn-sm" onclick="cloudSignOut()">🚪 Tancar sessió núvol</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="background: var(--bg-main);">
+                <h4 style="font-size: 1rem; margin-bottom: 6px;">🛠️ Configuració de la taula a Supabase (si encara no l'has creada)</h4>
+                <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 10px;">
+                    Assegura't d'haver executat aquest codi a l'<strong>SQL Editor</strong> del teu projecte de Supabase perquè la base de dades accepti les dades privades de cada usuari:
+                </p>
+                <pre style="background:#0F172A; color:#E2E8F0; padding:12px; border-radius:10px; font-size:0.78rem; overflow-x:auto; font-family:monospace;">create table if not exists public.escola_grups (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  students jsonb not null default '[]'::jsonb,
+  custom_texts jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.escola_grups enable row level security;
+create policy "Acces privat al propi grup" on public.escola_grups
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);</pre>
             </div>
         </div>
     </section>
@@ -1609,6 +1669,7 @@ function initStorage() {
 
 function saveStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    scheduleCloudPush();
 }
 
 function getPetForXP(xp) {
@@ -3068,7 +3129,7 @@ function verifyPin() {
 }
 
 function switchTeacherTab(tab) {
-    ['class', 'focus', 'texts', 'bulk'].forEach(t => {
+    ['class', 'focus', 'texts', 'bulk', 'cloud'].forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
         const panel = document.getElementById('teacher-tab-' + t);
         if (btn) btn.classList.toggle('active', t === tab);
@@ -3076,6 +3137,7 @@ function switchTeacherTab(tab) {
     });
     if (tab === 'focus') populateFocusStudentsSelect();
     if (tab === 'bulk') updateKioskUI();
+    if (tab === 'cloud') updateCloudUI();
 }
 
 function renderTeacherDashboard() {
@@ -3564,7 +3626,225 @@ function applyFontStyle() {
     });
 }
 
+
+const SUPABASE_URL = "https://ozgqztrzjubrakzyhsvd.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Ew4Rjt4V_cNnoJfW72Ncig_sHhJ-fFA";
+let sbClient = null;
+let sbCurrentUser = null;
+let sbSyncTimeout = null;
+
+function initSupabase() {
+    try {
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
+            sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            sbClient.auth.getSession().then(({ data }) => {
+                if (data && data.session && data.session.user) {
+                    sbCurrentUser = data.session.user;
+                    updateCloudUI();
+                    pullFromSupabase(false);
+                }
+            });
+            sbClient.auth.onAuthStateChange((_event, session) => {
+                sbCurrentUser = session ? session.user : null;
+                updateCloudUI();
+            });
+        }
+    } catch (e) {
+        console.warn("Supabase init warning:", e);
+    }
+}
+
+function updateCloudUI() {
+    const pill = document.getElementById('cloud-status-pill');
+    const outBox = document.getElementById('cloud-logged-out-box');
+    const inBox = document.getElementById('cloud-logged-in-box');
+    const emailDisp = document.getElementById('sb-user-email-display');
+
+    if (sbCurrentUser) {
+        if (pill) {
+            pill.style.display = "inline-block";
+            pill.textContent = "☁️ " + sbCurrentUser.email.split('@')[0];
+        }
+        if (outBox) outBox.style.display = "none";
+        if (inBox) inBox.style.display = "block";
+        if (emailDisp) emailDisp.textContent = sbCurrentUser.email;
+    } else {
+        if (pill) pill.style.display = "none";
+        if (outBox) outBox.style.display = "block";
+        if (inBox) inBox.style.display = "none";
+    }
+}
+
+async function cloudSignIn() {
+    if (!sbClient) return;
+    const email = document.getElementById('sb-email').value.trim();
+    const password = document.getElementById('sb-password').value;
+    const msg = document.getElementById('sb-auth-msg');
+    if (!email || !password) {
+        msg.style.color = "var(--danger)";
+        msg.textContent = "Introdueix el correu electrònic i la contrasenya.";
+        return;
+    }
+    msg.style.color = "var(--text-muted)";
+    msg.textContent = "⏳ Connectant amb el teu compte privat...";
+
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    if (error) {
+        msg.style.color = "var(--danger)";
+        msg.textContent = "⚠️ Error d'accés: " + error.message;
+        return;
+    }
+    sbCurrentUser = data.user;
+    msg.textContent = "";
+    updateCloudUI();
+    await pullFromSupabase(true);
+}
+
+async function cloudSignUp() {
+    if (!sbClient) return;
+    const email = document.getElementById('sb-email').value.trim();
+    const password = document.getElementById('sb-password').value;
+    const msg = document.getElementById('sb-auth-msg');
+    if (!email || password.length < 6) {
+        msg.style.color = "var(--danger)";
+        msg.textContent = "Escriu un correu vàlid i una contrasenya de 6 caràcters com a mínim.";
+        return;
+    }
+    msg.style.color = "var(--text-muted)";
+    msg.textContent = "⏳ Creant el teu usuari privat...";
+
+    const { data, error } = await sbClient.auth.signUp({ email, password });
+    if (error) {
+        msg.style.color = "var(--danger)";
+        msg.textContent = "⚠️ No s'ha pogut crear l'usuari: " + error.message;
+        return;
+    }
+    if (data.session) {
+        sbCurrentUser = data.user;
+        msg.textContent = "";
+        updateCloudUI();
+        await pushToSupabase();
+        alert("Usuari creat i dades actuals pujades al núvol!");
+    } else {
+        msg.style.color = "var(--secondary)";
+        msg.textContent = "✅ Usuari creat! Revisa el teu correu per confirmar-lo (o desactiva 'Confirm email' a Supabase) i inicia sessió.";
+    }
+}
+
+async function cloudSignOut() {
+    if (!sbClient) return;
+    await sbClient.auth.signOut();
+    sbCurrentUser = null;
+    updateCloudUI();
+}
+
+function scheduleCloudPush() {
+    if (!sbClient || !sbCurrentUser) return;
+    clearTimeout(sbSyncTimeout);
+    sbSyncTimeout = setTimeout(() => {
+        pushToSupabase();
+    }, 800);
+}
+
+async function pushToSupabase() {
+    if (!sbClient || !sbCurrentUser) return;
+    const pill = document.getElementById('cloud-status-pill');
+    if (pill) pill.textContent = "☁️ Desant...";
+    try {
+        const { error } = await sbClient
+            .from('escola_grups')
+            .upsert({
+                user_id: sbCurrentUser.id,
+                students: appData.students || [],
+                custom_texts: appData.customTexts || [],
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+
+        if (error) throw error;
+
+        const nowStr = new Date().toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
+        const disp = document.getElementById('sb-last-sync-display');
+        if (disp) disp.textContent = "Última sincronització: avui a les " + nowStr;
+        if (pill) pill.textContent = "☁️ " + sbCurrentUser.email.split('@')[0];
+    } catch (err) {
+        console.error("Error pujant dades a Supabase:", err);
+        if (pill) pill.textContent = "⚠️ Error núvol";
+    }
+}
+
+async function pullFromSupabase(showAlert) {
+    if (!sbClient || !sbCurrentUser) return;
+    const pill = document.getElementById('cloud-status-pill');
+    if (pill) pill.textContent = "☁️ Sincronitzant...";
+    try {
+        const { data, error } = await sbClient
+            .from('escola_grups')
+            .select('students, custom_texts, updated_at')
+            .eq('user_id', sbCurrentUser.id)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+            // Encara no hi ha registre al núvol per a aquest usuari: pugem el que hi hagi en local
+            await pushToSupabase();
+            if (showAlert) alert("Connexió establerta! S'han desat els perfils locals al teu espai privat del núvol.");
+            return;
+        }
+
+        // Fusionem dades del núvol amb les locals conservant sempre el progrés més avançat de cada alumne
+        const cloudStudents = Array.isArray(data.students) ? data.students : [];
+        let changed = false;
+
+        cloudStudents.forEach(cSt => {
+            const localSt = appData.students.find(s => s.id === cSt.id || s.name.toLowerCase() === cSt.name.toLowerCase());
+            if (!localSt) {
+                appData.students.push(cSt);
+                changed = true;
+            } else {
+                const cSessions = (cSt.sessions || []).length;
+                const lSessions = (localSt.sessions || []).length;
+                if (cSessions > lSessions || (cSt.xp || 0) > (localSt.xp || 0)) {
+                    Object.assign(localSt, cSt);
+                    changed = true;
+                }
+            }
+        });
+
+        const cloudTexts = Array.isArray(data.custom_texts) ? data.custom_texts : [];
+        cloudTexts.forEach(cTxt => {
+            if (!appData.customTexts.some(t => t.id === cTxt.id)) {
+                appData.customTexts.push(cTxt);
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            renderHomeStudents();
+            if (document.getElementById('view-teacher').classList.contains('active')) {
+                renderTeacherDashboard();
+                renderCustomTextsList();
+            }
+        }
+
+        // Pugem la fusió resultant perquè el núvol tingui també qualsevol progrés local nou
+        await pushToSupabase();
+
+        if (showAlert) alert("Sincronització completada correctament!");
+    } catch (err) {
+        console.error("Error baixant dades de Supabase:", err);
+        if (pill) pill.textContent = "⚠️ Error núvol";
+        if (showAlert) alert("No s'ha pogut sincronitzar: comprova que hagis creat la taula 'escola_grups' a Supabase.");
+    }
+}
+
+function syncNowFromCloud() {
+    pullFromSupabase(true);
+}
+
 initStorage();
+initSupabase();
 applyFontStyle();
 applyKioskState();
 renderHomeStudents();
