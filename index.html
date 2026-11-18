@@ -1266,9 +1266,11 @@
   custom_texts jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now()
 );
+grant all on public.escola_grups to authenticated;
 alter table public.escola_grups enable row level security;
+drop policy if exists "Acces privat al propi grup" on public.escola_grups;
 create policy "Acces privat al propi grup" on public.escola_grups
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);</pre>
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);</pre>
             </div>
         </div>
     </section>
@@ -3747,28 +3749,40 @@ function scheduleCloudPush() {
 }
 
 async function pushToSupabase() {
-    if (!sbClient || !sbCurrentUser) return;
+    if (!sbClient || !sbCurrentUser) return { ok: false, error: { message: "Sessió no iniciada" } };
     const pill = document.getElementById('cloud-status-pill');
     if (pill) pill.textContent = "☁️ Desant...";
     try {
+        const payload = {
+            user_id: sbCurrentUser.id,
+            students: appData.students || [],
+            custom_texts: appData.customTexts || [],
+            updated_at: new Date().toISOString()
+        };
         const { error } = await sbClient
             .from('escola_grups')
-            .upsert({
-                user_id: sbCurrentUser.id,
-                students: appData.students || [],
-                custom_texts: appData.customTexts || [],
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+            .upsert(payload, { onConflict: 'user_id' });
 
         if (error) throw error;
 
         const nowStr = new Date().toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
         const disp = document.getElementById('sb-last-sync-display');
-        if (disp) disp.textContent = "Última sincronització: avui a les " + nowStr;
+        if (disp) {
+            disp.style.color = "var(--text-muted)";
+            disp.textContent = "Última sincronització: avui a les " + nowStr;
+        }
         if (pill) pill.textContent = "☁️ " + sbCurrentUser.email.split('@')[0];
+        return { ok: true };
     } catch (err) {
         console.error("Error pujant dades a Supabase:", err);
+        const errDetail = (err && (err.message || err.details || err.hint)) ? `${err.message || ''} (${err.code || ''})` : JSON.stringify(err);
+        const disp = document.getElementById('sb-last-sync-display');
+        if (disp) {
+            disp.style.color = "var(--danger)";
+            disp.textContent = "⚠️ Error en desar: " + errDetail;
+        }
         if (pill) pill.textContent = "⚠️ Error núvol";
+        return { ok: false, error: err };
     }
 }
 
@@ -3786,13 +3800,12 @@ async function pullFromSupabase(showAlert) {
         if (error) throw error;
 
         if (!data) {
-            // Encara no hi ha registre al núvol per a aquest usuari: pugem el que hi hagi en local
-            await pushToSupabase();
+            const res = await pushToSupabase();
+            if (!res.ok) throw res.error;
             if (showAlert) alert("Connexió establerta! S'han desat els perfils locals al teu espai privat del núvol.");
             return;
         }
 
-        // Fusionem dades del núvol amb les locals conservant sempre el progrés més avançat de cada alumne
         const cloudStudents = Array.isArray(data.students) ? data.students : [];
         let changed = false;
 
@@ -3828,14 +3841,22 @@ async function pullFromSupabase(showAlert) {
             }
         }
 
-        // Pugem la fusió resultant perquè el núvol tingui també qualsevol progrés local nou
-        await pushToSupabase();
+        const res = await pushToSupabase();
+        if (!res.ok) throw res.error;
 
         if (showAlert) alert("Sincronització completada correctament!");
     } catch (err) {
         console.error("Error baixant dades de Supabase:", err);
+        const errDetail = (err && (err.message || err.details || err.hint))
+            ? `${err.message || ''} ${err.details || ''} (Codi: ${err.code || 'desconegut'})`
+            : JSON.stringify(err);
+        const disp = document.getElementById('sb-last-sync-display');
+        if (disp) {
+            disp.style.color = "var(--danger)";
+            disp.textContent = "⚠️ Detall de l'error: " + errDetail;
+        }
         if (pill) pill.textContent = "⚠️ Error núvol";
-        if (showAlert) alert("No s'ha pogut sincronitzar: comprova que hagis creat la taula 'escola_grups' a Supabase.");
+        if (showAlert) alert("Error de Supabase:\n" + errDetail);
     }
 }
 
