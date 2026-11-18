@@ -953,6 +953,7 @@
 
         <div class="tabs-bar no-print">
             <button class="tab-btn active" id="tab-btn-class" onclick="switchTeacherTab('class')">📋 Seguiment d'aula i gràfiques</button>
+            <button class="tab-btn" id="tab-btn-pins" onclick="switchTeacherTab('pins')">🔑 PINs de l'alumnat</button>
             <button class="tab-btn" id="tab-btn-focus" onclick="switchTeacherTab('focus')">🎯 Entrenament a la carta (AL/PT)</button>
             <button class="tab-btn" id="tab-btn-texts" onclick="switchTeacherTab('texts')">✍️ Textos propis de projecte</button>
             <button class="tab-btn" id="tab-btn-bulk" onclick="switchTeacherTab('bulk')">👥 Importar classe i bloqueig</button>
@@ -1198,6 +1199,49 @@
             </div>
         </div>
 
+
+        
+        <div id="teacher-tab-pins" style="display:none;">
+            <div class="card" style="margin-bottom: 22px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                    <div>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 4px;">🔑 Gestor de PINs d'accés de l'alumnat</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted);">Cada alumne disposa d'un PIN únic de 3 xifres per desbloquejar el seu perfil a l'aula.</p>
+                    </div>
+                    <div class="no-print" style="display:flex; gap:8px; align-items:center;">
+                        <select id="pins-group-filter" class="form-control" style="width:auto; padding:8px 12px; font-size:0.86rem;" onchange="renderPinsManager()">
+                            <option value="ALL">🏫 Tots els grups</option>
+                <option value="1r A">1r A</option>
+                <option value="1r B">1r B</option>
+                <option value="2n A">2n A</option>
+                <option value="2n B">2n B</option>
+                <option value="3r A">3r A</option>
+                <option value="3r B">3r B</option>
+                <option value="4t A">4t A</option>
+                <option value="4t B">4t B</option>
+                <option value="5è A">5è A</option>
+                <option value="5è B">5è B</option>
+                <option value="6è A">6è A</option>
+                <option value="6è B">6è B</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimir tots els PINs</button>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumne</th>
+                            <th>Grup classe</th>
+                            <th>Fase</th>
+                            <th>PIN personal (3 xifres)</th>
+                            <th>Accions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pins-table-body"></tbody>
+                </table>
+            </div>
+        </div>
 
         <div id="teacher-tab-focus" style="display:none;">
             <div class="card">
@@ -3284,15 +3328,57 @@ function verifyPin() {
 }
 
 function switchTeacherTab(tab) {
-    ['class', 'focus', 'texts', 'bulk', 'cloud'].forEach(t => {
+    ['class', 'pins', 'focus', 'texts', 'bulk', 'cloud'].forEach(t => {
         const btn = document.getElementById('tab-btn-' + t);
         const panel = document.getElementById('teacher-tab-' + t);
         if (btn) btn.classList.toggle('active', t === tab);
         if (panel) panel.style.display = t === tab ? 'block' : 'none';
     });
+    if (tab === 'pins') renderPinsManager();
     if (tab === 'focus') populateFocusStudentsSelect();
-    if (tab === 'bulk') { updateKioskUI(); document.getElementById('inp-global-pin').value = appData.studentPin || '1234'; }
+    if (tab === 'bulk') { updateKioskUI(); }
     if (tab === 'cloud') updateCloudUI();
+}
+
+
+function renderPinsManager() {
+    const tbody = document.getElementById('pins-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    if (appData.students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:24px; color:var(--text-muted);">Encara no hi ha alumnes registrats.</td></tr>`;
+        return;
+    }
+
+    const filterVal = document.getElementById('pins-group-filter') ? document.getElementById('pins-group-filter').value : 'ALL';
+    const visibleStudents = filterVal === 'ALL' ? appData.students : appData.students.filter(s => s.grade === filterVal);
+
+    visibleStudents.forEach(st => {
+        if (!st.pin || st.pin.length !== 3) {
+            st.pin = generateRandom3DigitPin();
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${st.avatar} ${st.name}</strong></td>
+            <td>${st.grade}</td>
+            <td>Fase ${st.phase}</td>
+            <td><code style="background:var(--bg-main); padding:6px 12px; border-radius:8px; font-size:1.15rem; font-weight:800; letter-spacing:0.2em; border:1px solid var(--border);">${st.pin}</code></td>
+            <td>
+                <button class="btn btn-outline btn-sm" onclick="regenerateStudentPin('${st.id}')" title="Generar nou PIN">🔄 Canviar PIN</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    saveStorage();
+}
+
+function regenerateStudentPin(id) {
+    const st = appData.students.find(s => s.id === id);
+    if (!st) return;
+    st.pin = generateRandom3DigitPin();
+    saveStorage();
+    renderPinsManager();
 }
 
 function renderTeacherDashboard() {
@@ -3679,6 +3765,7 @@ function importBulkStudents() {
                 id: "st_" + Date.now() + "_" + idx,
                 name,
                 grade,
+                pin: generateRandom3DigitPin(),
                 avatar: avatars[(appData.students.length + idx) % avatars.length],
                 phase,
                 tachSpeed: speed,
