@@ -1004,7 +1004,7 @@
             <div class="card no-print" style="overflow-x: auto; margin-bottom: 24px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
                     <h3 style="font-size: 1.1rem; margin:0;">Cribratge i estat de l'alumnat</h3>
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <label style="font-size:0.84rem; font-weight:600; color:var(--text-muted);">Filtrar grup:</label>
                         <select id="tch-group-filter" class="form-control" style="width:auto; padding:6px 12px; font-size:0.86rem;" onchange="renderTeacherDashboard()">
                             <option value="ALL">Tots els grups</option>
@@ -1022,6 +1022,7 @@
                 <option value="6è B">6è B</option>
 
                         </select>
+                        <button class="btn btn-primary btn-sm" onclick="printGroupPins('tch-group-filter')">🖨️ Imprimir PINs d'aquest grup</button>
                     </div>
                 </div>
                 <table>
@@ -1029,6 +1030,7 @@
                         <tr>
                             <th>Alumne</th>
                             <th>Grup classe</th>
+                            <th>PIN (3 xifres)</th>
                             <th>Fase actual</th>
                             <th>Sessions</th>
                             <th>Últims PPM</th>
@@ -1057,9 +1059,13 @@
                 </div>
 
                 <div class="no-print" style="background: var(--bg-main); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 22px; display:flex; gap:16px; flex-wrap:wrap; align-items:end;">
-                    <div style="min-width:170px;">
+                    <div style="min-width:160px;">
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:4px;">Nom de l'alumne:</label>
                         <input type="text" id="pi-name-input" class="form-control" style="padding:8px 12px;" onchange="updateStudentPI()">
+                    </div>
+                    <div style="width:115px;">
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:4px;">🔑 PIN (3 xifres):</label>
+                        <input type="text" inputmode="numeric" id="pi-pin-input" class="form-control" maxlength="3" style="padding:8px 12px; font-weight:800; text-align:center; letter-spacing:0.2em;" onchange="updateStudentPI()">
                     </div>
                     <div>
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:4px;">Etiqueta grup classe:</label>
@@ -1224,7 +1230,7 @@
                 <option value="6è A">6è A</option>
                 <option value="6è B">6è B</option>
                         </select>
-                        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Imprimir tots els PINs</button>
+                        <button class="btn btn-primary btn-sm" onclick="printGroupPins('pins-group-filter')">🖨️ Imprimir tots els PINs</button>
                     </div>
                 </div>
 
@@ -1417,6 +1423,11 @@ alter publication supabase_realtime add table public.escola_grups;</pre>
         </div>
 
         <div class="form-group">
+            <label>PIN d'accés de l'alumne (3 xifres)</label>
+            <input type="text" inputmode="numeric" id="inp-student-custom-pin" class="form-control" maxlength="3" placeholder="Ex. 482 (en blanc = automàtic)" style="letter-spacing:0.2em; font-weight:700; text-align:center;">
+        </div>
+
+        <div class="form-group">
             <label>Com comencem?</label>
             <select id="inp-student-startmode" class="form-control">
                 <option value="screening">🩺 Test de cribratge inicial (recomanat)</option>
@@ -1496,21 +1507,50 @@ alter publication supabase_realtime add table public.escola_grups;</pre>
             <button class="btn btn-secondary" onclick="importFromQRString()">Carregar alumne</button>
         </div>
     </div>
+</div>
 
 <div id="modal-student-pin" class="modal-backdrop">
-    <div class="modal-box" style="max-width:360px; text-align:center;">
-        <div style="font-size:2.8rem; margin-bottom:6px;" id="pin-student-avatar">🦊</div>
-        <h3 style="font-size:1.25rem; margin-bottom:4px;" id="pin-student-title">Desbloquejar alumne</h3>
-        <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:16px;">Introdueix el PIN numèric de l'aula per iniciar la sessió.</p>
-        <input type="password" id="inp-student-pin-attempt" class="form-control" style="text-align:center; font-size:1.5rem; letter-spacing:0.3em;" maxlength="6" placeholder="••••" onkeyup="if(event.key==='Enter') verifyStudentPin()">
-        <p id="student-pin-error" style="color:var(--danger); font-size:0.84rem; margin-top:8px; display:none;">PIN incorrecte. Torna-ho a provar.</p>
-        <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
-            <button class="btn btn-outline" onclick="closeModal('modal-student-pin')">Cancel·lar</button>
-            <button class="btn btn-primary" onclick="verifyStudentPin()">Desbloquejar</button>
+    <div class="modal-box" style="max-width:380px; text-align:center;">
+        <div style="font-size:2.8rem; margin-bottom:4px;" id="pin-student-avatar">🦊</div>
+        <h3 style="font-size:1.25rem; margin-bottom:2px;" id="pin-student-title">Alumne</h3>
+        <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:14px;">Introdueix el teu PIN secret de <strong>3 xifres</strong> per començar:</p>
+        <input type="password" inputmode="numeric" id="inp-student-pin-attempt" class="form-control" style="text-align:center; font-size:1.8rem; font-weight:800; letter-spacing:0.4em; max-width:200px; margin:0 auto 12px auto;" maxlength="3" placeholder="•••" onkeyup="if(event.key==='Enter') verifyStudentPin()">
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; max-width:240px; margin:0 auto 10px auto;">
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('1')">1</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('2')">2</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('3')">3</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('4')">4</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('5')">5</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('6')">6</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('7')">7</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('8')">8</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('9')">9</button>
+            <button type="button" class="btn btn-danger-soft" style="font-size:1rem; padding:12px 0;" onclick="clearPinDigits()">⌫</button>
+            <button type="button" class="btn btn-outline" style="font-size:1.25rem; padding:12px 0;" onclick="appendPinDigit('0')">0</button>
+            <button type="button" class="btn btn-secondary" style="font-size:1rem; padding:12px 0;" onclick="verifyStudentPin()">OK</button>
+        </div>
+        <p id="student-pin-error" style="color:var(--danger); font-size:0.84rem; margin-top:6px; font-weight:700; display:none;">❌ PIN incorrecte. Torna-ho a provar!</p>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:14px;">
+            <button class="btn btn-outline btn-sm" onclick="closeModal('modal-student-pin')">Cancel·lar</button>
         </div>
     </div>
 </div>
 
+<div id="modal-edit-pin" class="modal-backdrop">
+    <div class="modal-box" style="max-width:360px; text-align:center;">
+        <div style="font-size:2.4rem; margin-bottom:6px;" id="edit-pin-avatar">🔑</div>
+        <h3 style="font-size:1.2rem; margin-bottom:4px;" id="edit-pin-student-name">Configurar PIN</h3>
+        <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:14px;">Escriu el nou codi PIN de <strong>3 xifres</strong> per a aquest alumne:</p>
+        <div style="display:flex; gap:8px; justify-content:center; align-items:center; margin-bottom:12px;">
+            <input type="text" inputmode="numeric" id="inp-edit-pin-val" class="form-control" style="text-align:center; font-size:1.6rem; font-weight:800; letter-spacing:0.3em; max-width:150px;" maxlength="3" placeholder="123" onkeyup="if(event.key==='Enter') saveEditedStudentPin()">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('inp-edit-pin-val').value = generateRandom3DigitPin()" title="Generar PIN aleatori">🎲</button>
+        </div>
+        <p id="edit-pin-error" style="color:var(--danger); font-size:0.82rem; display:none; margin-bottom:8px;">El PIN ha de tenir exactament 3 xifres numèriques (000-999).</p>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:16px;">
+            <button class="btn btn-outline" onclick="closeModal('modal-edit-pin')">Cancel·lar</button>
+            <button class="btn btn-primary" onclick="saveEditedStudentPin()">💾 Desar PIN</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -1796,21 +1836,41 @@ function generateRandom3DigitPin() {
 }
 
 let pendingStudentIdToUnlock = null;
+let editingPinStudentId = null;
 
 function promptStudentPin(studentId) {
     const st = appData.students.find(s => s.id === studentId);
     if (!st) return;
-    if (!st.pin || st.pin.length !== 3) {
+    if (!st.pin || !/^[0-9]{3}$/.test(String(st.pin))) {
         st.pin = generateRandom3DigitPin();
         saveStorage();
     }
     pendingStudentIdToUnlock = studentId;
     document.getElementById('pin-student-avatar').textContent = st.avatar;
-    document.getElementById('pin-student-title').textContent = st.name + " (" + st.grade + ") · PIN: " + st.pin;
+    document.getElementById('pin-student-title').textContent = st.name + " (" + st.grade + ")";
     document.getElementById('inp-student-pin-attempt').value = "";
     document.getElementById('student-pin-error').style.display = "none";
     document.getElementById('modal-student-pin').classList.add('open');
     setTimeout(() => document.getElementById('inp-student-pin-attempt').focus(), 100);
+}
+
+function appendPinDigit(d) {
+    const inp = document.getElementById('inp-student-pin-attempt');
+    if (!inp) return;
+    document.getElementById('student-pin-error').style.display = "none";
+    if (inp.value.length < 3) {
+        inp.value += d;
+        if (inp.value.length === 3) {
+            setTimeout(() => verifyStudentPin(), 120);
+        }
+    }
+}
+
+function clearPinDigits() {
+    const inp = document.getElementById('inp-student-pin-attempt');
+    if (!inp) return;
+    inp.value = inp.value.slice(0, -1);
+    document.getElementById('student-pin-error').style.display = "none";
 }
 
 function verifyStudentPin() {
@@ -1818,7 +1878,8 @@ function verifyStudentPin() {
     const st = appData.students.find(s => s.id === pendingStudentIdToUnlock);
     if (!st) return;
 
-    if (attempt === (st.pin || "123")) {
+    if (attempt === String(st.pin)) {
+        playTone('ok');
         closeModal('modal-student-pin');
         applyStudentA11y(st);
         if (!st.screened) startScreeningTest(st.id);
@@ -1826,7 +1887,120 @@ function verifyStudentPin() {
     } else {
         playTone('err');
         document.getElementById('student-pin-error').style.display = "block";
+        document.getElementById('inp-student-pin-attempt').value = "";
     }
+}
+
+function openEditPinModal(studentId) {
+    const st = appData.students.find(s => s.id === studentId);
+    if (!st) return;
+    if (!st.pin || !/^[0-9]{3}$/.test(String(st.pin))) {
+        st.pin = generateRandom3DigitPin();
+    }
+    editingPinStudentId = studentId;
+    document.getElementById('edit-pin-avatar').textContent = st.avatar;
+    document.getElementById('edit-pin-student-name').textContent = "PIN de " + st.name + " (" + st.grade + ")";
+    document.getElementById('inp-edit-pin-val').value = st.pin;
+    document.getElementById('edit-pin-error').style.display = "none";
+    document.getElementById('modal-edit-pin').classList.add('open');
+    setTimeout(() => {
+        const inp = document.getElementById('inp-edit-pin-val');
+        inp.focus();
+        inp.select();
+    }, 100);
+}
+
+function saveEditedStudentPin() {
+    const st = appData.students.find(s => s.id === editingPinStudentId);
+    if (!st) return;
+    const val = document.getElementById('inp-edit-pin-val').value.trim();
+    if (!/^[0-9]{3}$/.test(val)) {
+        document.getElementById('edit-pin-error').style.display = "block";
+        return;
+    }
+    st.pin = val;
+    saveStorage();
+    closeModal('modal-edit-pin');
+    renderTeacherDashboard();
+    renderPinsManager();
+    if (selectedPIStudentId === st.id) {
+        const piPinInp = document.getElementById('pi-pin-input');
+        if (piPinInp) piPinInp.value = st.pin;
+    }
+}
+
+function printGroupPins(selectId) {
+    const sel = document.getElementById(selectId);
+    const filterVal = sel ? sel.value : 'ALL';
+    const list = filterVal === 'ALL' ? appData.students : appData.students.filter(s => s.grade === filterVal);
+
+    if (list.length === 0) {
+        alert("No hi ha alumnes per imprimir en aquest grup.");
+        return;
+    }
+
+    list.forEach(st => {
+        if (!st.pin || !/^[0-9]{3}$/.test(String(st.pin))) {
+            st.pin = generateRandom3DigitPin();
+        }
+    });
+    saveStorage();
+
+    const win = window.open('', '_blank', 'width=850,height=700');
+    if (!win) {
+        window.print();
+        return;
+    }
+
+    const cardsHtml = list.map(st => `
+        <div style="border:2px solid #2563EB; border-radius:14px; padding:14px; text-align:center; background:#fff; page-break-inside:avoid;">
+            <div style="font-size:0.72rem; font-weight:700; color:#2563EB; text-transform:uppercase;">Llegeix més escola · ${st.grade}</div>
+            <div style="font-size:2rem; margin:4px 0;">${st.avatar}</div>
+            <div style="font-size:1.1rem; font-weight:800; color:#0F172A; margin-bottom:8px;">${st.name}</div>
+            <div style="background:#EFF6FF; border:1.5px dashed #2563EB; border-radius:10px; padding:8px; font-size:1.45rem; font-weight:800; letter-spacing:0.25em; color:#1D4ED8;">
+                🔑 ${st.pin}
+            </div>
+        </div>
+    `).join('');
+
+    win.document.write(`
+        <!DOCTYPE html>
+        <html lang="ca">
+        <head>
+            <meta charset="UTF-8">
+            <title> Targetes i llista de PINs · ${filterVal === 'ALL' ? 'Tota l'escola' : filterVal}</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #0F172A; }
+                h2 { margin: 0 0 6px 0; }
+                p { margin: 0 0 20px 0; color: #475569; font-size: 0.9rem; }
+                .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.92rem; }
+                th, td { border: 1px solid #CBD5E1; padding: 8px 12px; text-align: left; }
+                th { background: #F1F5F9; }
+                @media print { .no-print { display: none !important; } }
+            </style>
+        </head>
+        <body>
+            <div class="no-print" style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; background:#EFF6FF; padding:12px 16px; border-radius:10px;">
+                <strong>🖨️ Vista d'impressió de codis PIN (${filterVal === 'ALL' ? 'Tots els grups' : filterVal})</strong>
+                <button onclick="window.print()" style="background:#2563EB; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Imprimir ara</button>
+            </div>
+            <h2>🔑 Codis PIN d'accés · ${filterVal === 'ALL' ? 'Tots els grups' : 'Grup ' + filterVal}</h2>
+            <p>Retalla les targetes per als alumnes o conserva la taula resum per al docent.</p>
+            <div class="grid">${cardsHtml}</div>
+            <h3>📋 Llista resum per al mestre/a</h3>
+            <table>
+                <thead>
+                    <tr><th>Alumne</th><th>Grup classe</th><th>Fase</th><th>PIN (3 xifres)</th></tr>
+                </thead>
+                <tbody>
+                    ${list.map(st => `<tr><td><strong>${st.avatar} ${st.name}</strong></td><td>${st.grade}</td><td>Fase ${st.phase}</td><td style="font-weight:800; font-size:1.1rem; letter-spacing:0.15em;">${st.pin}</td></tr>`).join('')}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `);
+    win.document.close();
 }
 
 
@@ -1837,6 +2011,13 @@ function initStorage() {
             appData = JSON.parse(saved);
             if (!appData.customTexts) appData.customTexts = [];
             if (!appData.a11y) appData.a11y = { cream: false, spacing: false, bicolor: false };
+            if (Array.isArray(appData.students)) {
+                appData.students.forEach(st => {
+                    if (!st.pin || !/^[0-9]{3}$/.test(String(st.pin))) {
+                        st.pin = generateRandom3DigitPin();
+                    }
+                });
+            }
         } catch (e) {
             appData.students = [];
         }
@@ -2065,6 +2246,8 @@ document.querySelectorAll('.avatar-opt').forEach(opt => {
 
 function openNewStudentModal() {
     document.getElementById('inp-student-name').value = "";
+    const pinInp = document.getElementById('inp-student-custom-pin');
+    if (pinInp) pinInp.value = generateRandom3DigitPin();
     document.getElementById('modal-new-student').classList.add('open');
 }
 
@@ -2091,10 +2274,15 @@ function createStudent() {
     else if (grade.startsWith("4t")) { phase = 4; speed = 950; }
     else if (grade.startsWith("5è") || grade.startsWith("6è")) { phase = 5; speed = 850; }
 
+    const pinInp = document.getElementById('inp-student-custom-pin');
+    const rawPin = pinInp ? pinInp.value.trim() : "";
+    const pin = (/^[0-9]{3}$/.test(rawPin)) ? rawPin : generateRandom3DigitPin();
+
     const newSt = {
         id: "st_" + Date.now(),
         name,
         grade,
+        pin,
         avatar,
         phase,
         tachSpeed: speed,
@@ -3348,14 +3536,33 @@ function renderPinsManager() {
             <td><strong>${st.avatar} ${st.name}</strong></td>
             <td>${st.grade}</td>
             <td>Fase ${st.phase}</td>
-            <td><code style="background:var(--bg-main); padding:6px 12px; border-radius:8px; font-size:1.15rem; font-weight:800; letter-spacing:0.2em; border:1px solid var(--border);">${st.pin}</code></td>
             <td>
-                <button class="btn btn-outline btn-sm" onclick="regenerateStudentPin('${st.id}')" title="Generar nou PIN">🔄 Canviar PIN</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="text" class="form-control" style="width:90px; text-align:center; font-weight:800; letter-spacing:0.15em; padding:6px;" maxlength="3" value="${st.pin}" id="pin-input-${st.id}" onchange="updateStudentPinInline('${st.id}', this.value)">
+                    <button class="btn btn-outline btn-sm" onclick="regenerateStudentPin('${st.id}')" title="Generar aleatori">🎲</button>
+                </div>
+            </td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="openStudentPI('${st.id}')">✏️ Editar PI</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
     saveStorage();
+}
+
+function updateStudentPinInline(studentId, newPin) {
+    const st = appData.students.find(s => s.id === studentId);
+    if (!st) return;
+    const clean = newPin.trim();
+    if (clean.length === 3 && /^[0-9]+$/.test(clean)) {
+        st.pin = clean;
+        saveStorage();
+        alert(`PIN de ${st.name} actualitzat correctament a: ${clean}`);
+    } else {
+        alert("El PIN ha de ser exactament de 3 xifres numèriques.");
+        renderPinsManager();
+    }
 }
 
 function regenerateStudentPin(id) {
@@ -3405,16 +3612,21 @@ function renderTeacherDashboard() {
             }
         }
 
+        if (!st.pin || !/^[0-9]{3}$/.test(String(st.pin))) {
+            st.pin = generateRandom3DigitPin();
+        }
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong>${st.avatar} ${st.name}</strong></td>
             <td>${st.grade}</td>
+            <td><code style="background:var(--primary-soft); color:var(--primary); padding:4px 10px; border-radius:8px; font-size:1.05rem; font-weight:800; letter-spacing:0.15em;">${st.pin}</code></td>
             <td>Fase ${st.phase}</td>
             <td>${st.sessions.length}</td>
             <td><strong>${last ? last.ppm + ' PPM' : '-'}</strong></td>
             <td>${last ? last.accuracy + '%' : '-'}</td>
             <td>${statusBadge}</td>
             <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn btn-purple btn-sm" onclick="openEditPinModal('${st.id}')" title="Configurar PIN de 3 xifres">🔑 PIN</button>
                 <button class="btn btn-outline btn-sm" onclick="openStudentPI('${st.id}')">✏️ Editar / PI</button>
                 <button class="btn btn-outline btn-sm" onclick="openStudentQRCard('${st.id}')" title="Carnet QR">🪪</button>
                 <button class="btn btn-danger-soft btn-sm" onclick="deleteStudentById('${st.id}')" title="Eliminar alumne">🗑️</button>
@@ -3481,6 +3693,9 @@ function openStudentPI(studentId) {
     document.getElementById('pi-meta').textContent = `${st.grade} · ${PHASES_INFO[st.phase].name} · Taquistoscopi: ${st.tachSpeed} ms`;
 
     document.getElementById('pi-name-input').value = st.name;
+    if (!st.pin || !/^[0-9]{3}$/.test(String(st.pin))) st.pin = generateRandom3DigitPin();
+    const piPinInp = document.getElementById('pi-pin-input');
+    if (piPinInp) piPinInp.value = st.pin;
     const gradeSel = document.getElementById('pi-grade-select');
     if (![...gradeSel.options].some(o => o.value === st.grade)) {
         const opt = document.createElement('option');
@@ -3556,6 +3771,10 @@ function updateStudentPI() {
     if (!st) return;
     const newName = document.getElementById('pi-name-input').value.trim();
     if (newName) st.name = newName;
+    const piPinInp = document.getElementById('pi-pin-input');
+    if (piPinInp && /^[0-9]{3}$/.test(piPinInp.value.trim())) {
+        st.pin = piPinInp.value.trim();
+    }
     st.grade = document.getElementById('pi-grade-select').value;
     st.phase = parseInt(document.getElementById('pi-phase-select').value, 10);
     st.tachSpeed = parseInt(document.getElementById('pi-speed-select').value, 10);
