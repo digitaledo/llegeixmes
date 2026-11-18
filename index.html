@@ -1335,7 +1335,8 @@ grant all on public.escola_grups to authenticated;
 alter table public.escola_grups enable row level security;
 drop policy if exists "Acces privat al propi grup" on public.escola_grups;
 create policy "Acces privat al propi grup" on public.escola_grups
-  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);</pre>
+  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+alter publication supabase_realtime add table public.escola_grups;</pre>
             </div>
         </div>
     </section>
@@ -3424,7 +3425,9 @@ function updateStudentPI() {
 function deleteStudentById(id) {
     const st = appData.students.find(s => s.id === id);
     if (!st) return;
-    if (confirm(`Segur que vols eliminar el perfil de ${st.name} (${st.grade})? Aquesta acció s'aplicarà també al núvol.`)) {
+    if (confirm(`Segur que vols eliminar el perfil de ${st.name} (${st.grade})? S'esborrarà immediatament de tots els dispositius.`)) {
+        if (!Array.isArray(appData.deletedIds)) appData.deletedIds = [];
+        if (!appData.deletedIds.includes(id)) appData.deletedIds.push(id);
         appData.students = appData.students.filter(s => s.id !== id);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
         pushToSupabase();
@@ -3738,26 +3741,108 @@ const SUPABASE_URL = "https://ozgqztrzjubrakzyhsvd.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Ew4Rjt4V_cNnoJfW72Ncig_sHhJ-fFA";
 let sbClient = null;
 let sbCurrentUser = null;
-let sbSyncTimeout = null;
+let sbRealtimeChannel = null;
+let sbPollingTimer = null;
+let sbIsPushing = false;
+let sbPendingPush = false;
+let sbLastCloudUpdatedAt = null;
 
 function initSupabase() {
     try {
         if (window.supabase && typeof window.supabase.createClient === 'function') {
-            sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                realtime: { params: { eventsPerSecond: 10 } }
+            });
             sbClient.auth.getSession().then(({ data }) => {
                 if (data && data.session && data.session.user) {
                     sbCurrentUser = data.session.user;
                     updateCloudUI();
                     pullFromSupabase(false);
+                    startRealtimeSync();
                 }
             });
             sbClient.auth.onAuthStateChange((_event, session) => {
+                const prevId = sbCurrentUser ? sbCurrentUser.id : null;
                 sbCurrentUser = session ? session.user : null;
                 updateCloudUI();
+                if (sbCurrentUser && sbCurrentUser.id !== prevId) {
+                    startRealtimeSync();
+                } else if (!sbCurrentUser) {
+                    stopRealtimeSync();
+                }
+            });
+
+            // Sincronització immediata quan l'usuari torna a la pestanya o desbloqueja la tauleta
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && sbCurrentUser) {
+                    pullFromSupabase(false);
+                }
+            });
+            window.addEventListener('focus', () => {
+                if (sbCurrentUser) pullFromSupabase(false);
             });
         }
     } catch (e) {
         console.warn("Supabase init warning:", e);
+    }
+}
+
+function startRealtimeSync() {
+    if (!sbClient || !sbCurrentUser) return;
+    stopRealtimeSync();
+
+    // 1. Subscripció en temps real via WebSocket (Supabase Realtime)
+    try {
+        sbRealtimeChannel = sbClient
+            .channel('escola_grups_rt_' + sbCurrentUser.id)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'escola_grups',
+                    filter: 'user_id=eq.' + sbCurrentUser.id
+                },
+                (payload) => {
+                    if (sbIsPushing) return;
+                    if (payload && payload.new) {
+                        applyRemoteCloudRecord(payload.new);
+                    } else {
+                        pullFromSupabase(false);
+                    }
+                }
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    const pill = document.getElementById('cloud-status-pill');
+                    if (pill && sbCurrentUser) {
+                        pill.style.display = "inline-flex";
+                        pill.textContent = "☁️";
+                        pill.style.borderColor = "#10B981";
+                        pill.title = "Temps real actiu (" + sbCurrentUser.email + ")";
+                    }
+                }
+            });
+    } catch (e) {
+        console.warn("Realtime channel error:", e);
+    }
+
+    // 2. Polling ràpid de seguretat cada 4 segons (per si la xarxa escolar bloqueja WebSockets)
+    sbPollingTimer = setInterval(() => {
+        if (sbCurrentUser && !sbIsPushing && document.visibilityState === 'visible') {
+            pullFromSupabase(false);
+        }
+    }, 4000);
+}
+
+function stopRealtimeSync() {
+    if (sbRealtimeChannel && sbClient) {
+        try { sbClient.removeChannel(sbRealtimeChannel); } catch (e) {}
+        sbRealtimeChannel = null;
+    }
+    if (sbPollingTimer) {
+        clearInterval(sbPollingTimer);
+        sbPollingTimer = null;
     }
 }
 
@@ -3769,8 +3854,10 @@ function updateCloudUI() {
 
     if (sbCurrentUser) {
         if (pill) {
-            pill.style.display = "inline-block";
-            pill.textContent = "☁️"; pill.style.borderColor = "#10B981"; pill.title = "Núvol sincronitzat (" + sbCurrentUser.email + ")";
+            pill.style.display = "inline-flex";
+            pill.textContent = "☁️";
+            pill.style.borderColor = "#10B981";
+            pill.title = "Núvol sincronitzat (" + sbCurrentUser.email + ")";
         }
         if (outBox) outBox.style.display = "none";
         if (inBox) inBox.style.display = "block";
@@ -3804,7 +3891,8 @@ async function cloudSignIn() {
     sbCurrentUser = data.user;
     msg.textContent = "";
     updateCloudUI();
-    await pullFromSupabase(true);
+    await pullFromSupabase(true, true);
+    startRealtimeSync();
 }
 
 async function cloudSignUp() {
@@ -3831,6 +3919,7 @@ async function cloudSignUp() {
         msg.textContent = "";
         updateCloudUI();
         await pushToSupabase();
+        startRealtimeSync();
         alert("Usuari creat i dades actuals pujades al núvol!");
     } else {
         msg.style.color = "var(--secondary)";
@@ -3840,29 +3929,35 @@ async function cloudSignUp() {
 
 async function cloudSignOut() {
     if (!sbClient) return;
+    stopRealtimeSync();
     await sbClient.auth.signOut();
     sbCurrentUser = null;
     updateCloudUI();
 }
 
+// Pujada immediata amb cua perquè cap canvi es perdi ni s'encavalqui
 function scheduleCloudPush() {
     if (!sbClient || !sbCurrentUser) return;
-    clearTimeout(sbSyncTimeout);
-    sbSyncTimeout = setTimeout(() => {
-        pushToSupabase();
-    }, 800);
+    pushToSupabase();
 }
 
 async function pushToSupabase() {
     if (!sbClient || !sbCurrentUser) return { ok: false, error: { message: "Sessió no iniciada" } };
+    if (sbIsPushing) {
+        sbPendingPush = true;
+        return { ok: true };
+    }
+    sbIsPushing = true;
     const pill = document.getElementById('cloud-status-pill');
     if (pill) { pill.textContent = "☁️"; pill.title = "Desant al núvol..."; }
+
     try {
+        const nowIso = new Date().toISOString();
         const payload = {
             user_id: sbCurrentUser.id,
             students: appData.students || [],
             custom_texts: appData.customTexts || [],
-            updated_at: new Date().toISOString()
+            updated_at: nowIso
         };
         const { error } = await sbClient
             .from('escola_grups')
@@ -3870,13 +3965,19 @@ async function pushToSupabase() {
 
         if (error) throw error;
 
-        const nowStr = new Date().toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
+        sbLastCloudUpdatedAt = nowIso;
+        const nowStr = new Date().toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const disp = document.getElementById('sb-last-sync-display');
         if (disp) {
             disp.style.color = "var(--text-muted)";
-            disp.textContent = "Última sincronització: avui a les " + nowStr;
+            disp.textContent = "Sincronitzat en temps real: " + nowStr;
         }
-        if (pill) pill.textContent = "☁️"; pill.style.borderColor = "#10B981"; pill.title = "Núvol sincronitzat (" + sbCurrentUser.email + ")";
+        if (pill) {
+            pill.style.display = "inline-flex";
+            pill.textContent = "☁️";
+            pill.style.borderColor = "#10B981";
+            pill.title = "Núvol sincronitzat (" + sbCurrentUser.email + ")";
+        }
         return { ok: true };
     } catch (err) {
         console.error("Error pujant dades a Supabase:", err);
@@ -3886,15 +3987,114 @@ async function pushToSupabase() {
             disp.style.color = "var(--danger)";
             disp.textContent = "⚠️ Error en desar: " + errDetail;
         }
-        if (pill) { pill.style.display = "inline-flex"; pill.textContent = "⚠️"; pill.style.borderColor = "#EF4444"; pill.title = "Error de connexió amb el núvol"; }
+        if (pill) {
+            pill.style.display = "inline-flex";
+            pill.textContent = "⚠️";
+            pill.style.borderColor = "#EF4444";
+            pill.title = "Error de connexió amb el núvol";
+        }
         return { ok: false, error: err };
+    } finally {
+        sbIsPushing = false;
+        if (sbPendingPush) {
+            sbPendingPush = false;
+            pushToSupabase();
+        }
     }
 }
 
-async function pullFromSupabase(showAlert) {
+function applyRemoteCloudRecord(data, isInitialLoginMerge = false) {
+    if (!data) return false;
+    // Evitem reprocessar la mateixa versió que acabem de pujar nosaltres
+    if (!isInitialLoginMerge && data.updated_at && data.updated_at === sbLastCloudUpdatedAt) {
+        return false;
+    }
+
+    const cloudStudents = Array.isArray(data.students) ? data.students : [];
+    const deletedIds = Array.isArray(appData.deletedIds) ? appData.deletedIds : [];
+    let changed = false;
+
+    if (isInitialLoginMerge) {
+        // En iniciar sessió per primer cop en un dispositiu, fusionem els alumnes locals nous que no estiguin esborrats
+        const merged = [...cloudStudents];
+        appData.students.forEach(lSt => {
+            if (!merged.some(c => c.id === lSt.id)) {
+                merged.push(lSt);
+                changed = true;
+            }
+        });
+        if (JSON.stringify(appData.students) !== JSON.stringify(merged)) {
+            appData.students = merged;
+            changed = true;
+        }
+    } else {
+        // Sincronització en temps real: el núvol és la font autoritativa (reflecteix esborrats, canvis de nom, grup, XP, sessions...)
+        const filteredCloud = cloudStudents.filter(cSt => !deletedIds.includes(cSt.id));
+
+        // Si un alumne està fent una sessió activa en aquest precís instant, conservem el seu progrés local si és superior
+        if (currentStudent && sessionState) {
+            const activeLocal = appData.students.find(s => s.id === currentStudent.id);
+            const inCloudIdx = filteredCloud.findIndex(s => s.id === currentStudent.id);
+            if (activeLocal && inCloudIdx !== -1) {
+                if ((activeLocal.xp || 0) > (filteredCloud[inCloudIdx].xp || 0)) {
+                    filteredCloud[inCloudIdx] = activeLocal;
+                }
+            }
+        }
+
+        if (JSON.stringify(appData.students) !== JSON.stringify(filteredCloud)) {
+            appData.students = filteredCloud;
+            changed = true;
+        }
+    }
+
+    const cloudTexts = Array.isArray(data.custom_texts) ? data.custom_texts : [];
+    if (JSON.stringify(appData.customTexts) !== JSON.stringify(cloudTexts)) {
+        appData.customTexts = cloudTexts;
+        changed = true;
+    }
+
+    if (data.updated_at) sbLastCloudUpdatedAt = data.updated_at;
+
+    if (changed) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        refreshVisibleViewsAfterSync();
+    }
+
+    const nowStr = new Date().toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const disp = document.getElementById('sb-last-sync-display');
+    if (disp) {
+        disp.style.color = "var(--text-muted)";
+        disp.textContent = "Sincronitzat en temps real: " + nowStr;
+    }
+    return changed;
+}
+
+function refreshVisibleViewsAfterSync() {
+    if (document.getElementById('view-home').classList.contains('active')) {
+        renderHomeStudents();
+    }
+    if (document.getElementById('view-teacher').classList.contains('active')) {
+        renderTeacherDashboard();
+        renderCustomTextsList();
+        if (selectedPIStudentId) {
+            const stillExists = appData.students.some(s => s.id === selectedPIStudentId);
+            if (stillExists) {
+                // Només refresquem la fitxa PI si l'usuari no està escrivint dins el camp de nom
+                if (document.activeElement !== document.getElementById('pi-name-input')) {
+                    openStudentPI(selectedPIStudentId);
+                }
+            } else {
+                selectedPIStudentId = null;
+                document.getElementById('pi-detail-card').style.display = "none";
+            }
+        }
+    }
+}
+
+async function pullFromSupabase(showAlert, isInitialLoginMerge = false) {
     if (!sbClient || !sbCurrentUser) return;
     const pill = document.getElementById('cloud-status-pill');
-    if (pill) { pill.textContent = "☁️"; pill.title = "Sincronitzant amb el núvol..."; }
     try {
         const { data, error } = await sbClient
             .from('escola_grups')
@@ -3911,43 +4111,18 @@ async function pullFromSupabase(showAlert) {
             return;
         }
 
-        const cloudStudents = Array.isArray(data.students) ? data.students : [];
-        let changed = false;
+        const wasChanged = applyRemoteCloudRecord(data, isInitialLoginMerge);
 
-        cloudStudents.forEach(cSt => {
-            const localSt = appData.students.find(s => s.id === cSt.id || s.name.toLowerCase() === cSt.name.toLowerCase());
-            if (!localSt) {
-                appData.students.push(cSt);
-                changed = true;
-            } else {
-                const cSessions = (cSt.sessions || []).length;
-                const lSessions = (localSt.sessions || []).length;
-                if (cSessions > lSessions || (cSt.xp || 0) > (localSt.xp || 0)) {
-                    Object.assign(localSt, cSt);
-                    changed = true;
-                }
-            }
-        });
-
-        const cloudTexts = Array.isArray(data.custom_texts) ? data.custom_texts : [];
-        cloudTexts.forEach(cTxt => {
-            if (!appData.customTexts.some(t => t.id === cTxt.id)) {
-                appData.customTexts.push(cTxt);
-                changed = true;
-            }
-        });
-
-        if (changed) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            renderHomeStudents();
-            if (document.getElementById('view-teacher').classList.contains('active')) {
-                renderTeacherDashboard();
-                renderCustomTextsList();
-            }
+        if (isInitialLoginMerge && wasChanged) {
+            await pushToSupabase();
         }
 
-        const res = await pushToSupabase();
-        if (!res.ok) throw res.error;
+        if (pill) {
+            pill.style.display = "inline-flex";
+            pill.textContent = "☁️";
+            pill.style.borderColor = "#10B981";
+            pill.title = "Núvol sincronitzat (" + sbCurrentUser.email + ")";
+        }
 
         if (showAlert) alert("Sincronització completada correctament!");
     } catch (err) {
@@ -3960,13 +4135,18 @@ async function pullFromSupabase(showAlert) {
             disp.style.color = "var(--danger)";
             disp.textContent = "⚠️ Detall de l'error: " + errDetail;
         }
-        if (pill) { pill.style.display = "inline-flex"; pill.textContent = "⚠️"; pill.style.borderColor = "#EF4444"; pill.title = "Error de connexió amb el núvol"; }
+        if (pill) {
+            pill.style.display = "inline-flex";
+            pill.textContent = "⚠️";
+            pill.style.borderColor = "#EF4444";
+            pill.title = "Error de connexió amb el núvol";
+        }
         if (showAlert) alert("Error de Supabase:\n" + errDetail);
     }
 }
 
 function syncNowFromCloud() {
-    pullFromSupabase(true);
+    pullFromSupabase(true, false);
 }
 
 initStorage();
