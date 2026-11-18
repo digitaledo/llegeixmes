@@ -813,7 +813,7 @@
         <button class="btn btn-outline btn-sm" onclick="openQRScannerModal()">📷 QR</button>
         <button class="btn btn-outline btn-sm" onclick="toggleA11yBar()">👁️ Lectura fàcil</button>
         <button class="btn btn-outline btn-sm" onclick="goHome()">🏠 Aula</button>
-        <span id="cloud-status-pill" class="badge badge-blue" style="display:none; cursor:pointer;" onclick="syncNowFromCloud()" title="Estat sincronització núvol">☁️ Connectat</span>
+        <button id="cloud-status-pill" class="btn btn-outline btn-sm" style="display:none; padding:5px 9px; font-size:0.95rem;" onclick="syncNowFromCloud()" title="Estat sincronització núvol">☁️</button>
         <button class="btn btn-purple btn-sm" id="btn-teacher-space" onclick="openTeacherLogin()">👩‍🏫 Mestres</button>
     </div>
 </header>
@@ -842,7 +842,23 @@
                 <h3 style="font-size: 1.25rem;">Selecciona el teu explorador per començar</h3>
                 <p style="font-size: 0.88rem; color: var(--text-muted);">Cada sessió entrenada fa evolucionar la teva mascota i obre un sobre d'adhesius sorpresa.</p>
             </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <select id="home-group-filter" class="form-control" style="width:auto; padding:9px 12px; font-size:0.88rem; font-weight:600;" onchange="renderHomeStudents()">
+                    <option value="ALL">🏫 Tots els grups</option>
+                <option value="1r A">1r A</option>
+                <option value="1r B">1r B</option>
+                <option value="2n A">2n A</option>
+                <option value="2n B">2n B</option>
+                <option value="3r A">3r A</option>
+                <option value="3r B">3r B</option>
+                <option value="4t A">4t A</option>
+                <option value="4t B">4t B</option>
+                <option value="5è A">5è A</option>
+                <option value="5è B">5è B</option>
+                <option value="6è A">6è A</option>
+                <option value="6è B">6è B</option>
+
+                </select>
                 <button class="btn btn-outline" onclick="openQRScannerModal()">📷 Entrar amb QR</button>
                 <button class="btn btn-primary" id="btn-new-student-home" onclick="openNewStudentModal()">+ Nou alumne</button>
             </div>
@@ -985,12 +1001,33 @@
             </div>
 
             <div class="card no-print" style="overflow-x: auto; margin-bottom: 24px;">
-                <h3 style="margin-bottom: 14px; font-size: 1.1rem;">Cribratge i estat de l'alumnat</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+                    <h3 style="font-size: 1.1rem; margin:0;">Cribratge i estat de l'alumnat</h3>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <label style="font-size:0.84rem; font-weight:600; color:var(--text-muted);">Filtrar grup:</label>
+                        <select id="tch-group-filter" class="form-control" style="width:auto; padding:6px 12px; font-size:0.86rem;" onchange="renderTeacherDashboard()">
+                            <option value="ALL">Tots els grups</option>
+                <option value="1r A">1r A</option>
+                <option value="1r B">1r B</option>
+                <option value="2n A">2n A</option>
+                <option value="2n B">2n B</option>
+                <option value="3r A">3r A</option>
+                <option value="3r B">3r B</option>
+                <option value="4t A">4t A</option>
+                <option value="4t B">4t B</option>
+                <option value="5è A">5è A</option>
+                <option value="5è B">5è B</option>
+                <option value="6è A">6è A</option>
+                <option value="6è B">6è B</option>
+
+                        </select>
+                    </div>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Alumne</th>
-                            <th>Curs</th>
+                            <th>Grup classe</th>
                             <th>Fase actual</th>
                             <th>Sessions</th>
                             <th>Últims PPM</th>
@@ -1019,6 +1056,28 @@
                 </div>
 
                 <div class="no-print" style="background: var(--bg-main); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 22px; display:flex; gap:16px; flex-wrap:wrap; align-items:end;">
+                    <div style="min-width:170px;">
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:4px;">Nom de l'alumne:</label>
+                        <input type="text" id="pi-name-input" class="form-control" style="padding:8px 12px;" onchange="updateStudentPI()">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:4px;">Etiqueta grup classe:</label>
+                        <select id="pi-grade-select" class="form-control" style="padding:8px 12px;" onchange="updateStudentPI()">
+                <option value="1r A">1r A</option>
+                <option value="1r B">1r B</option>
+                <option value="2n A">2n A</option>
+                <option value="2n B">2n B</option>
+                <option value="3r A">3r A</option>
+                <option value="3r B">3r B</option>
+                <option value="4t A">4t A</option>
+                <option value="4t B">4t B</option>
+                <option value="5è A">5è A</option>
+                <option value="5è B">5è B</option>
+                <option value="6è A">6è A</option>
+                <option value="6è B">6è B</option>
+
+                        </select>
+                    </div>
                     <div>
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:4px;">Assignar fase fonològica:</label>
                         <select id="pi-phase-select" class="form-control" style="padding:8px 12px;" onchange="updateStudentPI()">
@@ -1178,14 +1237,20 @@
                 </p>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
                     <div>
-                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Curs del grup</label>
+                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Grup classe</label>
                         <select id="bulk-grade-select" class="form-control">
-                            <option value="1r de primària">1r de primària</option>
-                            <option value="2n de primària">2n de primària</option>
-                            <option value="3r de primària">3r de primària</option>
-                            <option value="4t de primària">4t de primària</option>
-                            <option value="5è de primària">5è de primària</option>
-                            <option value="6è de primària">6è de primària</option>
+                <option value="1r A">1r A</option>
+                <option value="1r B">1r B</option>
+                <option value="2n A">2n A</option>
+                <option value="2n B">2n B</option>
+                <option value="3r A">3r A</option>
+                <option value="3r B">3r B</option>
+                <option value="4t A">4t A</option>
+                <option value="4t B">4t B</option>
+                <option value="5è A">5è A</option>
+                <option value="5è B">5è B</option>
+                <option value="6è A">6è A</option>
+                <option value="6è B">6è B</option>
                         </select>
                     </div>
                     <div>
@@ -1287,14 +1352,20 @@ create policy "Acces privat al propi grup" on public.escola_grups
         </div>
 
         <div class="form-group">
-            <label>Curs de primària</label>
+            <label>Grup classe</label>
             <select id="inp-student-grade" class="form-control">
-                <option value="1r de primària">1r de primària</option>
-                <option value="2n de primària">2n de primària</option>
-                <option value="3r de primària">3r de primària</option>
-                <option value="4t de primària">4t de primària</option>
-                <option value="5è de primària">5è de primària</option>
-                <option value="6è de primària">6è de primària</option>
+                <option value="1r A">1r A</option>
+                <option value="1r B">1r B</option>
+                <option value="2n A">2n A</option>
+                <option value="2n B">2n B</option>
+                <option value="3r A">3r A</option>
+                <option value="3r B">3r B</option>
+                <option value="4t A">4t A</option>
+                <option value="4t B">4t B</option>
+                <option value="5è A">5è A</option>
+                <option value="5è B">5è B</option>
+                <option value="6è A">6è A</option>
+                <option value="6è B">6è B</option>
             </select>
         </div>
 
@@ -1834,9 +1905,18 @@ function renderHomeStudents() {
         return;
     }
 
+    const filterVal = document.getElementById('home-group-filter') ? document.getElementById('home-group-filter').value : 'ALL';
+    const filteredStudents = filterVal === 'ALL' ? appData.students : appData.students.filter(s => s.grade === filterVal);
+
+    if (filteredStudents.length === 0) {
+        grid.style.display = "block";
+        grid.innerHTML = `<div class="card" style="text-align:center; padding:32px;"><p style="color:var(--text-muted);">No hi ha cap alumne assignat al grup <strong>${filterVal}</strong>.</p></div>`;
+        return;
+    }
+
     grid.style.display = "grid";
 
-    appData.students.forEach(st => {
+    filteredStudents.forEach(st => {
         const lastSes = st.sessions[st.sessions.length - 1];
         const ppmText = lastSes ? `${lastSes.ppm} PPM` : "Pendent cribratge";
         const accText = lastSes ? `${lastSes.accuracy}% precisió` : "Sessió 0";
@@ -3157,7 +3237,10 @@ function renderTeacherDashboard() {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">Encara no hi ha alumnes registrats a l'aula. Clica <strong>+ Nou alumne</strong> per començar.</td></tr>`;
     }
 
-    students.forEach(st => {
+    const tchFilter = document.getElementById('tch-group-filter') ? document.getElementById('tch-group-filter').value : 'ALL';
+    const visibleStudents = tchFilter === 'ALL' ? students : students.filter(s => s.grade === tchFilter);
+
+    visibleStudents.forEach(st => {
         const last = st.sessions[st.sessions.length - 1];
         const expected = PHASES_INFO[st.phase].expectedPPM;
 
@@ -3187,9 +3270,10 @@ function renderTeacherDashboard() {
             <td><strong>${last ? last.ppm + ' PPM' : '-'}</strong></td>
             <td>${last ? last.accuracy + '%' : '-'}</td>
             <td>${statusBadge}</td>
-            <td style="display:flex; gap:6px;">
-                <button class="btn btn-outline btn-sm" onclick="openStudentPI('${st.id}')">📊 Fitxa PI</button>
+            <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="openStudentPI('${st.id}')">✏️ Editar / PI</button>
                 <button class="btn btn-outline btn-sm" onclick="openStudentQRCard('${st.id}')" title="Carnet QR">🪪</button>
+                <button class="btn btn-danger-soft btn-sm" onclick="deleteStudentById('${st.id}')" title="Eliminar alumne">🗑️</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -3252,6 +3336,15 @@ function openStudentPI(studentId) {
     document.getElementById('pi-name').textContent = `${st.avatar} ${st.name}`;
     document.getElementById('pi-meta').textContent = `${st.grade} · ${PHASES_INFO[st.phase].name} · Taquistoscopi: ${st.tachSpeed} ms`;
 
+    document.getElementById('pi-name-input').value = st.name;
+    const gradeSel = document.getElementById('pi-grade-select');
+    if (![...gradeSel.options].some(o => o.value === st.grade)) {
+        const opt = document.createElement('option');
+        opt.value = st.grade;
+        opt.textContent = st.grade;
+        gradeSel.appendChild(opt);
+    }
+    gradeSel.value = st.grade;
     document.getElementById('pi-phase-select').value = st.phase;
     document.getElementById('pi-speed-select').value = st.tachSpeed;
     document.getElementById('pi-a11y-select').value = st.a11yProfile || "none";
@@ -3317,6 +3410,9 @@ function launchScreeningForSelected() {
 function updateStudentPI() {
     const st = appData.students.find(s => s.id === selectedPIStudentId);
     if (!st) return;
+    const newName = document.getElementById('pi-name-input').value.trim();
+    if (newName) st.name = newName;
+    st.grade = document.getElementById('pi-grade-select').value;
     st.phase = parseInt(document.getElementById('pi-phase-select').value, 10);
     st.tachSpeed = parseInt(document.getElementById('pi-speed-select').value, 10);
     st.a11yProfile = document.getElementById('pi-a11y-select').value;
@@ -3325,15 +3421,24 @@ function updateStudentPI() {
     openStudentPI(st.id);
 }
 
-function deleteCurrentPIStudent() {
-    const st = appData.students.find(s => s.id === selectedPIStudentId);
+function deleteStudentById(id) {
+    const st = appData.students.find(s => s.id === id);
     if (!st) return;
-    if (confirm(`Segur que vols eliminar el perfil de ${st.name}?`)) {
-        appData.students = appData.students.filter(s => s.id !== selectedPIStudentId);
-        saveStorage();
-        document.getElementById('pi-detail-card').style.display = "none";
+    if (confirm(`Segur que vols eliminar el perfil de ${st.name} (${st.grade})? Aquesta acció s'aplicarà també al núvol.`)) {
+        appData.students = appData.students.filter(s => s.id !== id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        pushToSupabase();
+        if (selectedPIStudentId === id) {
+            selectedPIStudentId = null;
+            document.getElementById('pi-detail-card').style.display = "none";
+        }
         renderTeacherDashboard();
+        renderHomeStudents();
     }
+}
+
+function deleteCurrentPIStudent() {
+    if (selectedPIStudentId) deleteStudentById(selectedPIStudentId);
 }
 
 function saveCustomText() {
@@ -3665,7 +3770,7 @@ function updateCloudUI() {
     if (sbCurrentUser) {
         if (pill) {
             pill.style.display = "inline-block";
-            pill.textContent = "☁️ " + sbCurrentUser.email.split('@')[0];
+            pill.textContent = "☁️"; pill.style.borderColor = "#10B981"; pill.title = "Núvol sincronitzat (" + sbCurrentUser.email + ")";
         }
         if (outBox) outBox.style.display = "none";
         if (inBox) inBox.style.display = "block";
@@ -3751,7 +3856,7 @@ function scheduleCloudPush() {
 async function pushToSupabase() {
     if (!sbClient || !sbCurrentUser) return { ok: false, error: { message: "Sessió no iniciada" } };
     const pill = document.getElementById('cloud-status-pill');
-    if (pill) pill.textContent = "☁️ Desant...";
+    if (pill) { pill.textContent = "☁️"; pill.title = "Desant al núvol..."; }
     try {
         const payload = {
             user_id: sbCurrentUser.id,
@@ -3771,7 +3876,7 @@ async function pushToSupabase() {
             disp.style.color = "var(--text-muted)";
             disp.textContent = "Última sincronització: avui a les " + nowStr;
         }
-        if (pill) pill.textContent = "☁️ " + sbCurrentUser.email.split('@')[0];
+        if (pill) pill.textContent = "☁️"; pill.style.borderColor = "#10B981"; pill.title = "Núvol sincronitzat (" + sbCurrentUser.email + ")";
         return { ok: true };
     } catch (err) {
         console.error("Error pujant dades a Supabase:", err);
@@ -3781,7 +3886,7 @@ async function pushToSupabase() {
             disp.style.color = "var(--danger)";
             disp.textContent = "⚠️ Error en desar: " + errDetail;
         }
-        if (pill) pill.textContent = "⚠️ Error núvol";
+        if (pill) { pill.style.display = "inline-flex"; pill.textContent = "⚠️"; pill.style.borderColor = "#EF4444"; pill.title = "Error de connexió amb el núvol"; }
         return { ok: false, error: err };
     }
 }
@@ -3789,7 +3894,7 @@ async function pushToSupabase() {
 async function pullFromSupabase(showAlert) {
     if (!sbClient || !sbCurrentUser) return;
     const pill = document.getElementById('cloud-status-pill');
-    if (pill) pill.textContent = "☁️ Sincronitzant...";
+    if (pill) { pill.textContent = "☁️"; pill.title = "Sincronitzant amb el núvol..."; }
     try {
         const { data, error } = await sbClient
             .from('escola_grups')
@@ -3855,7 +3960,7 @@ async function pullFromSupabase(showAlert) {
             disp.style.color = "var(--danger)";
             disp.textContent = "⚠️ Detall de l'error: " + errDetail;
         }
-        if (pill) pill.textContent = "⚠️ Error núvol";
+        if (pill) { pill.style.display = "inline-flex"; pill.textContent = "⚠️"; pill.style.borderColor = "#EF4444"; pill.title = "Error de connexió amb el núvol"; }
         if (showAlert) alert("Error de Supabase:\n" + errDetail);
     }
 }
