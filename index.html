@@ -771,6 +771,124 @@
             .flash-box { font-size: 2.3rem; height: 120px; }
             .chain-box { font-size: 1.5rem; }
         }
+    
+        /* Super Panell de Control estil mòbil (App Launcher) */
+        .super-panel-header {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #1E3A8A 100%);
+            color: white;
+            border-radius: var(--radius-xl);
+            padding: 22px 26px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: var(--shadow-md);
+        }
+        .super-panel-header h2 { font-size: 1.42rem; font-weight: 800; margin-bottom: 4px; color: #FFFFFF; }
+        .super-panel-header p { font-size: 0.86rem; color: #CBD5E1; margin: 0; }
+        .super-panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .super-panel-actions .btn-glass {
+            background: rgba(255,255,255,0.12);
+            color: #FFFFFF;
+            border: 1px solid rgba(255,255,255,0.22);
+            backdrop-filter: blur(6px);
+        }
+        .super-panel-actions .btn-glass:hover { background: rgba(255,255,255,0.22); }
+
+        .app-launcher-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .app-tile {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 16px 10px 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+        }
+        .app-tile:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: #93C5FD;
+        }
+        .app-tile:active { transform: scale(0.96); }
+        .app-tile.active {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.16);
+        }
+        .app-tile.active::after {
+            content: "";
+            position: absolute;
+            bottom: 6px;
+            width: 22px;
+            height: 4px;
+            border-radius: 99px;
+            background: var(--primary);
+        }
+        .app-icon-squircle {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            margin-bottom: 9px;
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+            color: white;
+        }
+        .sq-blue { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .sq-purple { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+        .sq-amber { background: linear-gradient(135deg, #F59E0B, #D97706); }
+        .sq-teal { background: linear-gradient(135deg, #14B8A6, #0F766E); }
+        .sq-emerald { background: linear-gradient(135deg, #10B981, #047857); }
+        .sq-indigo { background: linear-gradient(135deg, #6366F1, #4338CA); }
+        .sq-sky { background: linear-gradient(135deg, #0EA5E9, #0369A1); }
+
+        .app-tile-title {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+        .app-tile-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .app-tile-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 99px;
+        }
+        @media (max-width: 640px) {
+            .app-launcher-grid { grid-template-columns: repeat(3, 1fr); gap: 9px; }
+            .app-tile { padding: 12px 6px 12px 6px; border-radius: 16px; }
+            .app-icon-squircle { width: 46px; height: 46px; font-size: 1.45rem; border-radius: 14px; }
+            .app-tile-title { font-size: 0.76rem; }
+            .app-tile-sub { display: none; }
+        }
+
     </style>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -920,29 +1038,60 @@
     </section>
 
     <section id="view-teacher" class="view">
-        <div class="section-header no-print">
+        <div class="super-panel-header no-print">
             <div>
-                <h2 style="font-size: 1.5rem;">Panell de control · Mestres i especialistes AL/PT</h2>
-                <p style="font-size: 0.9rem; color: var(--text-muted);">Cribratge inicial, gràfiques d'evolució, mapa de calor fonològic, carnets QR i textos d'aula.</p>
+                <span class="badge" style="background:rgba(255,255,255,0.16); color:#93C5FD; margin-bottom:6px;">🎛️ Super Panell Docent · AL / PT</span>
+                <h2>Centre de Control d'Aula</h2>
+                <p>Tria una aplicació per gestionar alumnes, PINs, resultats PACBAL, textos o còpies de seguretat.</p>
             </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button class="btn btn-outline btn-sm" onclick="exportClassData()">💾 Exportar (.json)</button>
-                <label class="btn btn-outline btn-sm" style="cursor:pointer;">
-                    📂 Importar / fusionar
+            <div class="super-panel-actions">
+                <button class="btn btn-primary btn-sm" onclick="openNewStudentModal()">➕ Nou alumne</button>
+                <button class="btn btn-glass btn-sm" onclick="exportClassData()">💾 Exportar</button>
+                <label class="btn btn-glass btn-sm" style="cursor:pointer; margin:0;">
+                    📂 Importar
                     <input type="file" accept=".json" style="display:none;" onchange="importClassData(event)">
                 </label>
-                <button class="btn btn-primary btn-sm" onclick="openNewStudentModal()">+ Nou alumne</button>
+                <button class="btn btn-glass btn-sm" onclick="goHome()">🏠 Aula</button>
             </div>
         </div>
 
-        <div class="tabs-bar no-print">
-            <button class="tab-btn active" id="tab-btn-class" onclick="switchTeacherTab('class')">📋 Seguiment d'aula i gràfiques</button>
-            <button class="tab-btn" id="tab-btn-pacbal" onclick="switchTeacherTab('pacbal')">📊 Resultats PACBAL</button>
-            <button class="tab-btn" id="tab-btn-pins" onclick="switchTeacherTab('pins')">🔑 PINs de l'alumnat</button>
-            <button class="tab-btn" id="tab-btn-focus" onclick="switchTeacherTab('focus')">🎯 Entrenament a la carta (AL/PT)</button>
-            <button class="tab-btn" id="tab-btn-texts" onclick="switchTeacherTab('texts')">✍️ Textos propis de projecte</button>
-            <button class="tab-btn" id="tab-btn-bulk" onclick="switchTeacherTab('bulk')">👥 Importar classe i bloqueig</button>
-            <button class="tab-btn" id="tab-btn-cloud" onclick="switchTeacherTab('cloud')">☁️ Compte privat i núvol</button>
+        <div class="app-launcher-grid no-print">
+            <div class="app-tile active" id="tab-btn-class" onclick="switchTeacherTab('class')">
+                <span class="app-tile-badge" id="tile-badge-students">0</span>
+                <div class="app-icon-squircle sq-blue">📋</div>
+                <div class="app-tile-title">Seguiment i PI</div>
+                <div class="app-tile-sub">Gràfiques i informes</div>
+            </div>
+            <div class="app-tile" id="tab-btn-pacbal" onclick="switchTeacherTab('pacbal')">
+                <div class="app-icon-squircle sq-purple">📊</div>
+                <div class="app-tile-title">Resultats PACBAL</div>
+                <div class="app-tile-sub">Cribratge pràctic</div>
+            </div>
+            <div class="app-tile" id="tab-btn-pins" onclick="switchTeacherTab('pins')">
+                <div class="app-icon-squircle sq-amber">🔑</div>
+                <div class="app-tile-title">PINs alumnat</div>
+                <div class="app-tile-sub">Claus i targetes</div>
+            </div>
+            <div class="app-tile" id="tab-btn-focus" onclick="switchTeacherTab('focus')">
+                <div class="app-icon-squircle sq-teal">🎯</div>
+                <div class="app-tile-title">A la carta</div>
+                <div class="app-tile-sub">Suport AL / PT</div>
+            </div>
+            <div class="app-tile" id="tab-btn-texts" onclick="switchTeacherTab('texts')">
+                <div class="app-icon-squircle sq-emerald">✍️</div>
+                <div class="app-tile-title">Textos d'aula</div>
+                <div class="app-tile-sub">Lectures pròpies</div>
+            </div>
+            <div class="app-tile" id="tab-btn-bulk" onclick="switchTeacherTab('bulk')">
+                <div class="app-icon-squircle sq-indigo">👥</div>
+                <div class="app-tile-title">Llista i Quiosc</div>
+                <div class="app-tile-sub">Alta massiva</div>
+            </div>
+            <div class="app-tile" id="tab-btn-cloud" onclick="switchTeacherTab('cloud')">
+                <div class="app-icon-squircle sq-sky">☁️</div>
+                <div class="app-tile-title">Compte i Núvol</div>
+                <div class="app-tile-sub">Sincronització</div>
+            </div>
         </div>
 
         <div id="teacher-tab-class">
@@ -1382,7 +1531,7 @@
 
         <div id="teacher-tab-cloud" style="display:none;">
             <div class="card" style="margin-bottom: 22px;">
-                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">☁️ Sincronització al núvol privat (Supabase)</h3>
+                <h3 style="font-size: 1.2rem; margin-bottom: 6px;">☁️ Sincronització al núvol privat del centre</h3>
                 <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
                     Inicia sessió amb el teu usuari privat de docent o d'escola. Tots els perfils dels alumnes, les seves puntuacions, adhesius i textos d'aula es desaran automàticament al teu espai privat i se sincronitzaran entre totes les tauletes i ordinadors on hagis iniciat sessió.
                 </p>
@@ -1422,30 +1571,12 @@
                             <label style="display:block; font-size:0.8rem; font-weight:700; color:#065F46; margin-bottom:4px;">🔑 Canviar contrasenya d'administració (mínim 6 caràcters):</label>
                             <input type="password" id="sb-new-password" class="form-control" style="padding:8px 12px;" placeholder="Nova contrasenya...">
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="changeAdminSupabasePassword()">💾 Actualitzar contrasenya</button>
+                        <button class="btn btn-primary btn-sm" onclick="changeAdminCloudPassword()">💾 Actualitzar contrasenya</button>
                     </div>
                 </div>
             </div>
 
-            <div class="card" style="background: var(--bg-main);">
-                <h4 style="font-size: 1rem; margin-bottom: 6px;">🛠️ Configuració de la taula a Supabase (si encara no l'has creada)</h4>
-                <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 10px;">
-                    Assegura't d'haver executat aquest codi a l'<strong>SQL Editor</strong> del teu projecte de Supabase perquè la base de dades accepti les dades privades de cada usuari:
-                </p>
-                <pre style="background:#0F172A; color:#E2E8F0; padding:12px; border-radius:10px; font-size:0.78rem; overflow-x:auto; font-family:monospace;">create table if not exists public.escola_grups (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  students jsonb not null default '[]'::jsonb,
-  custom_texts jsonb not null default '[]'::jsonb,
-  updated_at timestamptz not null default now()
-);
-grant all on public.escola_grups to authenticated;
-alter table public.escola_grups enable row level security;
-drop policy if exists "Acces privat al propi grup" on public.escola_grups;
-create policy "Acces privat al propi grup" on public.escola_grups
-  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
-alter publication supabase_realtime add table public.escola_grups;</pre>
-            </div>
-        </div>
+                    </div>
     </section>
 </main>
 
@@ -1515,13 +1646,13 @@ alter publication supabase_realtime add table public.escola_grups;</pre>
     <div class="modal-box" style="max-width: 410px; text-align: center;">
         <div style="font-size: 2.5rem; margin-bottom: 8px;">🔐</div>
         <h3 style="font-size: 1.25rem; margin-bottom: 6px;">Accés Administració i Docents</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Inicia sessió amb el compte administrador de Supabase per accedir al panell i sincronitzar l'aula.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Inicia sessió amb el compte d'administració del centre per accedir al panell i sincronitzar l'aula.</p>
         <div class="form-group" style="text-align:left; margin-bottom:10px;">
             <label style="font-size:0.82rem;">Correu electrònic d'administració</label>
             <input type="email" id="inp-admin-email" class="form-control" value="gestor@eugenidors.com" placeholder="gestor@eugenidors.com">
         </div>
         <div class="form-group" style="text-align:left; margin-bottom:8px;">
-            <label style="font-size:0.82rem;">Contrasenya</label>
+            <label style="font-size:0.82rem;">Contrasenya d'accés</label>
             <input type="password" id="inp-pin" class="form-control" style="font-size:1.1rem;" placeholder="••••••••" onkeyup="if(event.key==='Enter') verifyPin()">
         </div>
         <p id="pin-error" style="color:var(--danger); font-size:0.84rem; margin-top:8px; display:none;">Contrasenya o correu incorrectes.</p>
