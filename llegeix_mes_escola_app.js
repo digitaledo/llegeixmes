@@ -46,78 +46,7 @@ const SENTENCE_SCRAMBLE_DB = {
         ["La", "pilota", "és", "blava."]
     ],
     2: [
-        {
-            title: "El ratolí que no volia dutxar-se (PACBAL 2n)",
-            text: "Era un ratolí que vivia feliç en una casa de pagès. El seu cau era darrera la màquina de cosir. Cada dia al vespre tenia un problema: no volia dutxar-se. Un dia, després de rebolcar-se a la cort de porcs amb els seus amics, va tornar cap a casa. Va entrar ràpid, va passar per darrera la mestressa i va entrar al cau. La mestressa va dir: Quina pudor que sento! I ensumant, ensumant va arribar a la màquina de cosir. La mare del ratolí, espantada, va posar el ratolí a la dutxa i el va rentar amb sabó. És estrany! va pensar la mestressa. Ara sento bona olor. I el ratolí mai més va tenir mandra de dutxar-se.",
-            questions: [
-                { q: "Quan tenia el problema el ratolí?", opts: ["Al matí", "Al migdia", "A la tarda", "Al vespre"], ans: 3 },
-                { q: "Què no li agradava fer al ratolí?", opts: ["Vestir-se", "Dutxar-se", "Ensabonar-se", "Embrutar-se"], ans: 1 },
-                { q: "Qui fa mala olor?", opts: ["La mestressa", "La mare", "El ratolí", "El pagès"], ans: 2 },
-                { q: "Què fa la mare amb el ratolí?", opts: ["El dutxa", "L'espanta", "L'amaga", "L'olora"], ans: 0 },
-                { q: "Què sent la mestressa al final?", opts: ["Bona olor", "Pudor", "Soroll", "Mala olor"], ans: 0 },
-                { q: "De què va la història?", opts: ["D'una mestressa que neteja", "D'un ratolí que li agrada cosir", "D'un ratolí que no li agrada dutxar-se", "D'uns amics que es dutxen"], ans: 2 }
-            ]
-        },
-        {
-            title: "Les cireres de la Maria (PACBAL 2n)",
-            text: "És l'hora de pati. Com cada dia la Maria menja fruita. Avui la mare li ha posat un bon grapat de cireres vermelles i lluentes. La Maria se les menja amb delit i posa els pinyols a la carmanyola. Quan ja ha acabat, la carmanyola se li escapa de la mà i tot va per terra. La Marta s'ho mira des del tobogan. En Lluc i la Rosa la van a ajudar. Tot d'una en Lluc fa una proposta: - Per què no plantem els pinyols? Si creixen cirerers podrem agafar cireres amb les mans! Tots hi estan d'acord. Es posen a buscar un bon lloc, però sona el timbre. Només queda la classe de Mates. Després de dinar acabaran la feina.",
-            questions: [
-                { q: "Amb què porta les cireres la Maria?", opts: ["En una bossa", "A la mà", "A la butxaca", "En una carmanyola"], ans: 3 },
-                { q: "Què li va caure per terra a la Maria?", opts: ["Totes les cireres i la carmanyola", "Alguns pinyols i algunes cireres", "Tots els pinyols i la carmanyola", "Només els pinyols"], ans: 2 },
-                { q: "A quina part del dia passa aquest fet?", opts: ["Al pati de la tarda", "Al pati del matí", "Després de dinar", "A la sortida de l'escola"], ans: 1 },
-                { q: "Quins nens ajuden la Maria?", opts: ["La Marta, en Lluc i la Rosa", "La Marta i la Rosa", "La Rosa i en Lluc", "La Marta i en Lluc"], ans: 2 },
-                { q: "Quina classe hi ha després del pati?", opts: ["No hi ha cap classe", "Mates", "Música", "Naturals"], ans: 1 },
-                { q: "Quina és la feina que han d'acabar després de dinar?", opts: ["Collir els pinyols de terra", "Collir cireres amb les mans", "Rentar la carmanyola", "Plantar els pinyols al terra"], ans: 3 }
-            ]
-        },
-        {
-            title: "L'ànec blau (PACBAL 2n)",
-            text: "Era un bonic ànec blau. Era el fill gran d'una família d'ànecs. D'ànecs n'hi ha de moltes classes i colors diferents. Ell era l'únic ànec de color blau. Tots els seus germans i germanes el miraven estranyats. Uns deien que no era germà seu, que venia d'una altra terra. Els altres deien que havia caigut del cel. Un dia la seva mare els va explicar per què era blau. Resulta que quan feia una setmana que havia nascut, es va quedar adormit durant molts dies. No hi havia manera que es despertés. La mare va anar a buscar l'ànec metge. El doctor li va donar unes pastilles miraculoses de color blau. I per fi es va despertar, però el seu color havia canviat.",
-            questions: [
-                { q: "Per què el miraven estranyats els seus germans?", opts: ["Perquè era el gran", "Perquè era de color groc", "Perquè tenia molta son", "Perquè era diferent dels altres"], ans: 3 },
-                { q: "Qui sabia per què l'ànec era blau?", opts: ["Els seus germans", "Els altres ànecs", "La seva família", "La seva mare"], ans: 3 },
-                { q: "Quan es va quedar adormit?", opts: ["Quan tenia un any", "Quan tenia dos anys", "Quan tenia pocs dies", "Quan tenia un mes"], ans: 2 },
-                { q: "Qui va anar a buscar la mare?", opts: ["L'ànec metge", "El metge del poble", "L'ànec més vell", "Els seus germans"], ans: 0 },
-                { q: "Per què era blau l'ànec?", opts: ["Perquè era el fill gran", "Perquè havia dormit molt", "Perquè va prendre pastilles blaves", "Perquè l'havien pintat"], ans: 2 },
-                { q: "De què tracta aquesta història?", opts: ["D'una mare ànec", "D'un ànec que era diferent", "D'un ànec que va caure", "D'un ànec que no podia dormir"], ans: 1 }
-            ]
-        },
-        {
-            title: "En Moll (PACBAL 2n)",
-            text: "En Moll nedava en el seu mar tranquil quan de sobte va sentir un cargolí a la panxa. Quina gana! El cas és que ja estava tip de menjar algues. Les algues no tenien cap gust i va decidir de buscar alguna cosa millor per menjar. La família d'en Moll només menjaven algues. Va continuar nedant fent moure les aletes dins l'aigua. Al cap d'una estona va veure que de la sorra en sortia alguna cosa. Era un petit cuc. En Moll va obrir la boca per menjar-se'l. Però l'animaló se'l va mirar amb uns ulls tan tristos, que la boca se li va tancar. De fet, les algues no són pas tan dolentes va pensar en Moll mentre menjava.",
-            questions: [
-                { q: "Qui era en Moll?", opts: ["Un nen", "Un submarinista", "Una alga", "Un peix"], ans: 3 },
-                { q: "Per què no li agradaven les algues?", opts: ["Perquè eren verdes", "Perquè li feien mal de panxa", "Perquè no eren bones", "Perquè no tenien cap gust"], ans: 3 },
-                { q: "Què és el que buscava?", opts: ["Algues marines", "La seva família", "Un menjar millor", "Els seus amics"], ans: 2 },
-                { q: "Què menjava la família d'en Moll?", opts: ["Algues i peixos", "Només algues", "Només peixos", "De tot"], ans: 1 },
-                { q: "Per on nedava?", opts: ["Per sobre del mar", "Pel fons del mar", "Al costat de les roques", "A prop de les barques"], ans: 1 },
-                { q: "Per què l'animaló es mirava en Moll amb els ulls tristos?", opts: ["Perquè no volia que se'l mengés", "Perquè no sabia què passava", "Perquè estava constipat", "Perquè tenia molta gana"], ans: 0 }
-            ]
-        },
-        {
-            title: "L'elefant Trapezi (PACBAL 2n)",
-            text: "En Trapezi és un elefant petit. Viu a la selva de l'Àfrica en una manada amb molts elefants. La seva mare està preocupada. Sovint en Trapezi fa de les seves: amb la trompa tira sorra als altres elefants, els dóna cops, i així tot el dia. La seva mare el vol escarmentar. Un matí quan la manada marxa, deixa el seu fill dormint. Quan es desperta, en Trapezi queda tot parat i es troba molt sol. Comença a donar voltes i no veu ningú enlloc. En Trapezi està molt trist i tot sol no sap què fer. Crida desesperat la seva mare que arriba al cap de poca estona. De camí cap a la manada en Trapezi diu: A partir d'ara tractaré bé tots els elefants.",
-            questions: [
-                { q: "Amb qui viu en Trapezi?", opts: ["Amb un grup d'elefants", "Tot sol", "Amb la seva mare", "Amb els seus amics"], ans: 0 },
-                { q: "Per què està preocupada la seva mare?", opts: ["Perquè fa el que vol", "Perquè molesta els altres elefants", "Perquè s'escapa de la manada", "Perquè no vol menjar"], ans: 1 },
-                { q: "Què fa la mare per escarmentar en Trapezi?", opts: ["No el desperta perquè quedi sol", "Li dóna un cop amb la trompa", "Té gana i no li dóna esmorzar", "El fa aixecar abans d'hora"], ans: 0 },
-                { q: "Per què la mare vol escarmentar en Trapezi?", opts: ["Perquè deixi d'empipar els altres elefants", "Perquè no s'escapi", "Perquè no prengui menjar", "Perquè els altres elefants puguin dormir"], ans: 0 },
-                { q: "Què li diu en Trapezi a la seva mare?", opts: ["Que no vol tornar a la manada", "Que tractarà bé tots els elefants", "Que no li agrada que el deixin sol", "Que té molta gana"], ans: 1 },
-                { q: "Per què en Trapezi ha après a tractar bé els altres elefants?", opts: ["Perquè la mare no hi és", "Perquè no veu ningú enlloc", "Perquè ha vist que sol no s'està bé", "Perquè no troba menjar"], ans: 2 }
-            ]
-        },
-        {
-            title: "Un regal per a la Sàmia (PACBAL 2n)",
-            text: "Quina sorpresa va tenir la Sàmia! Damunt la taula de la cuina va veure una capsa de color rosa i lila que es movia! Dins hi havia un gosset preciós. Tenia el pèl blanc amb taques negres i marronoses. La Sàmia, feliç i contenta, va abraçar i va fer mil petons als pares que digueren: -Sàmia, ja sabem que jugaràs i estimaràs molt el gosset, però volem que el cuidis tu. Has d'alimentar-lo i portar-lo a passejar perquè pugui caminar, córrer i fer les seves necessitats. Des d'aquell dia han estat inseparables. Matí i tarda es veu la Sàmia i en Puc que caminen, corren i juguen. Fins i tot a la nit dormen de costat.",
-            questions: [
-                { q: "Quants colors té el gosset de la Sàmia?", opts: ["Quatre colors", "Molts colors", "Tres colors", "Dos colors"], ans: 2 },
-                { q: "Quina condició van posar els pares a la Sàmia?", opts: ["Estimar molt l'animal", "Dormir al seu costat", "Jugar amb l'animal cada dia", "Cuidar ella sola del gosset"], ans: 3 },
-                { q: "Per què els pares van regalar un gosset a la Sàmia?", opts: ["Perquè la Sàmia volia un regal", "Perquè el gosset era molt bonic", "Perquè li feia molta il·lusió tenir un gosset", "Perquè la Sàmia no tenia cap gos"], ans: 2 },
-                { q: "Quina responsabilitat té la Sàmia amb l'animal cada dia?", opts: ["Donar-li menjar i beure", "Donar-li menjar i portar-lo a passejar", "Jugar-hi cada dia", "Caminar, córrer i jugar"], ans: 1 },
-                { q: "Quan surten a passejar la Sàmia i en Puc?", opts: ["Cada dia al matí", "Matí i tarda", "A la nit", "Només a la tarda"], ans: 1 },
-                { q: "On dorm en Puc?", opts: ["A l'habitació de la Sàmia", "A la capsa rosa i lila", "A la seva caseta", "En un coixí a la cuina"], ans: 0 }
-            ]
-        },        ["La", "formiga", "puja", "a", "l'arbre."],
+        ["La", "formiga", "puja", "a", "l'arbre."],
         ["Avui", "anem", "a", "l'escola."],
         ["El", "pastís", "té", "una", "espelma."],
         ["Tinc", "un", "llapis", "de", "colors."]
@@ -682,7 +611,6 @@ function generateSmartDistractors(word) {
 }
 
 const STORAGE_KEY = "llegeix_mes_escola_pro_final_v1";
-const TEACHER_PASS = "eugeni";
 
 let appData = {
     students: [],
@@ -2453,21 +2381,78 @@ function importFromQRString() {
 }
 
 function openTeacherLogin() {
+    const emailInp = document.getElementById('inp-admin-email');
+    if (emailInp) {
+        emailInp.value = (sbCurrentUser && sbCurrentUser.email) ? sbCurrentUser.email : "gestor@eugenidors.com";
+    }
     document.getElementById('inp-pin').value = "";
     document.getElementById('pin-error').style.display = "none";
     document.getElementById('modal-pin').classList.add('open');
     setTimeout(() => document.getElementById('inp-pin').focus(), 100);
 }
 
-function verifyPin() {
-    if (document.getElementById('inp-pin').value.trim().toLowerCase() === TEACHER_PASS) {
+async function verifyPin() {
+    const emailInp = document.getElementById('inp-admin-email');
+    const email = (emailInp ? emailInp.value.trim() : "gestor@eugenidors.com") || "gestor@eugenidors.com";
+    const password = document.getElementById('inp-pin').value;
+    const errEl = document.getElementById('pin-error');
+    const btn = document.getElementById('btn-admin-login-submit');
+
+    if (!password) {
+        errEl.textContent = "Introdueix la contrasenya.";
+        errEl.style.display = "block";
+        return;
+    }
+
+    if (!sbClient) {
+        errEl.textContent = "⚠️ No s'ha pogut connectar amb el servidor d'autenticació (Supabase). Revisa la connexió a Internet.";
+        errEl.style.display = "block";
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = "⏳ Verificant..."; }
+    errEl.style.display = "none";
+
+    try {
+        const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+        if (error || !data || !data.user) {
+            errEl.textContent = "❌ Credencials incorrectes (" + (error ? error.message : "accés denegat") + ").";
+            errEl.style.display = "block";
+            return;
+        }
+        sbCurrentUser = data.user;
+        updateCloudUI();
         closeModal('modal-pin');
         renderTeacherDashboard();
         renderCustomTextsList();
         switchView('view-teacher');
-    } else {
-        document.getElementById('pin-error').style.display = "block";
+        await pullFromSupabase(false, true);
+        startRealtimeSync();
+    } catch (e) {
+        errEl.textContent = "⚠️ Error de xarxa en verificar l'usuari.";
+        errEl.style.display = "block";
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "🔑 Entrar al panell"; }
     }
+}
+
+async function changeAdminSupabasePassword() {
+    if (!sbClient || !sbCurrentUser) {
+        alert("Has d'iniciar sessió com a administrador primer.");
+        return;
+    }
+    const newPass = document.getElementById('sb-new-password').value;
+    if (!newPass || newPass.length < 6) {
+        alert("La nova contrasenya ha de tenir com a mínim 6 caràcters.");
+        return;
+    }
+    const { error } = await sbClient.auth.updateUser({ password: newPass });
+    if (error) {
+        alert("⚠️ No s'ha pogut actualitzar la contrasenya: " + error.message);
+        return;
+    }
+    document.getElementById('sb-new-password').value = "";
+    alert("✅ Contrasenya d'administració actualitzada correctament a Supabase!");
 }
 
 function switchTeacherTab(tab) {
