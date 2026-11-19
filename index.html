@@ -1417,6 +1417,13 @@
                             <button class="btn btn-danger-soft btn-sm" onclick="cloudSignOut()">🚪 Tancar sessió núvol</button>
                         </div>
                     </div>
+                    <div style="margin-top:16px; padding-top:14px; border-top:1px solid #A7F3D0; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:200px;">
+                            <label style="display:block; font-size:0.8rem; font-weight:700; color:#065F46; margin-bottom:4px;">🔑 Canviar contrasenya d'administració (mínim 6 caràcters):</label>
+                            <input type="password" id="sb-new-password" class="form-control" style="padding:8px 12px;" placeholder="Nova contrasenya...">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="changeAdminSupabasePassword()">💾 Actualitzar contrasenya</button>
+                    </div>
                 </div>
             </div>
 
@@ -1505,15 +1512,22 @@ alter publication supabase_realtime add table public.escola_grups;</pre>
 </div>
 
 <div id="modal-pin" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 380px; text-align: center;">
+    <div class="modal-box" style="max-width: 410px; text-align: center;">
         <div style="font-size: 2.5rem; margin-bottom: 8px;">🔐</div>
-        <h3 style="font-size: 1.25rem; margin-bottom: 6px;">Accés docents i AL/PT</h3>
-        <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 16px;">Introdueix la contrasenya docent per accedir al panell de control.</p>
-        <input type="password" id="inp-pin" class="form-control" style="text-align:center; font-size:1.3rem; letter-spacing:0.15em;" placeholder="Contrasenya" onkeyup="if(event.key==='Enter') verifyPin()">
-        <p id="pin-error" style="color:var(--danger); font-size:0.84rem; margin-top:8px; display:none;">Contrasenya incorrecta. Torna-ho a provar.</p>
-        <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
+        <h3 style="font-size: 1.25rem; margin-bottom: 6px;">Accés Administració i Docents</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Inicia sessió amb el compte administrador de Supabase per accedir al panell i sincronitzar l'aula.</p>
+        <div class="form-group" style="text-align:left; margin-bottom:10px;">
+            <label style="font-size:0.82rem;">Correu electrònic d'administració</label>
+            <input type="email" id="inp-admin-email" class="form-control" value="gestor@eugenidors.com" placeholder="gestor@eugenidors.com">
+        </div>
+        <div class="form-group" style="text-align:left; margin-bottom:8px;">
+            <label style="font-size:0.82rem;">Contrasenya (Supabase Auth)</label>
+            <input type="password" id="inp-pin" class="form-control" style="font-size:1.1rem;" placeholder="••••••••" onkeyup="if(event.key==='Enter') verifyPin()">
+        </div>
+        <p id="pin-error" style="color:var(--danger); font-size:0.84rem; margin-top:8px; display:none;">Contrasenya o correu incorrectes.</p>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:18px;">
             <button class="btn btn-outline" onclick="closeModal('modal-pin')">Cancel·lar</button>
-            <button class="btn btn-primary" onclick="verifyPin()">Entrar</button>
+            <button class="btn btn-primary" id="btn-admin-login-submit" onclick="verifyPin()">🔑 Entrar al panell</button>
         </div>
     </div>
 </div>
@@ -1601,6 +1615,6 @@ alter publication supabase_realtime add table public.escola_grups;</pre>
     </div>
 </div>
 
-<script src="llegeix_mes_escola_v12.js"></script>
+<script src="llegeix_mes_escola_v13.js"></script>
 </body>
 </html>
