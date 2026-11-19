@@ -2405,7 +2405,7 @@ async function verifyPin() {
     }
 
     if (!sbClient) {
-        errEl.textContent = "⚠️ No s'ha pogut connectar amb el servidor d'autenticació (Supabase). Revisa la connexió a Internet.";
+        errEl.textContent = "⚠️ No s'ha pogut connectar amb el servidor d'autenticació. Revisa la connexió a Internet.";
         errEl.style.display = "block";
         return;
     }
@@ -2436,7 +2436,7 @@ async function verifyPin() {
     }
 }
 
-async function changeAdminSupabasePassword() {
+async function changeAdminCloudPassword() {
     if (!sbClient || !sbCurrentUser) {
         alert("Has d'iniciar sessió com a administrador primer.");
         return;
@@ -2452,7 +2452,7 @@ async function changeAdminSupabasePassword() {
         return;
     }
     document.getElementById('sb-new-password').value = "";
-    alert("✅ Contrasenya d'administració actualitzada correctament a Supabase!");
+    alert("✅ Contrasenya d'administració actualitzada correctament!");
 }
 
 function switchTeacherTab(tab) {
@@ -2679,6 +2679,8 @@ function regenerateStudentPin(id) {
 function renderTeacherDashboard() {
     const students = appData.students;
     document.getElementById('tch-total-students').textContent = students.length;
+    const tileBadge = document.getElementById('tile-badge-students');
+    if (tileBadge) tileBadge.textContent = students.length;
 
     const dictCount = Object.values(LEXICON_DB).reduce((acc, arr) => acc + arr.length, 0);
     document.getElementById('tch-dict-size').textContent = dictCount;
@@ -2788,6 +2790,11 @@ function openStudentPI(studentId) {
     selectedPIStudentId = studentId;
     const st = appData.students.find(s => s.id === studentId);
     if (!st) return;
+
+    const classTab = document.getElementById('teacher-tab-class');
+    if (classTab && classTab.style.display === 'none') {
+        switchTeacherTab('class');
+    }
 
     const card = document.getElementById('pi-detail-card');
     card.style.display = "block";
@@ -3629,7 +3636,7 @@ async function pullFromSupabase(showAlert, isInitialLoginMerge = false) {
             pill.style.borderColor = "#EF4444";
             pill.title = "Error de connexió amb el núvol";
         }
-        if (showAlert) alert("Error de Supabase:\n" + errDetail);
+        if (showAlert) alert("Error de connexió amb el núvol:\n" + errDetail);
     }
 }
 
@@ -3642,3 +3649,5 @@ initSupabase();
 applyFontStyle();
 applyKioskState();
 renderHomeStudents();
+
+const changeAdminSupabasePassword = changeAdminCloudPassword;
