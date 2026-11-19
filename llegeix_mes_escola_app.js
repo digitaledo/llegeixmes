@@ -1278,7 +1278,7 @@ function startSession(studentId) {
 
     for (let i = 0; i < 2; i++) {
         const pw = generatePseudoword(phase);
-        steps.push({ type: 'flash', word: pw, tag: "Pseudoparaules (ruta fonològica)", isPseudo: true });
+        steps.push({ type: 'flash', word: pw, tag: "Pseudoparaules (PACBAL)", isPseudo: true });
     }
 
     const customForPhase = appData.customTexts.filter(ct => ct.phase === phase);
@@ -2127,6 +2127,7 @@ function renderComprehensionQuestions(passage, qIdx) {
                 fb.textContent = "✨ Resposta correcta!";
                 sessionState.correctCount++;
                 sessionState.combo++;
+                recordPhonemeResult("Comprensió lectora (PACBAL)", true);
             } else {
                 btn.style.borderColor = "var(--danger)";
                 btn.style.background = "var(--danger-soft)";
@@ -2134,6 +2135,7 @@ function renderComprehensionQuestions(passage, qIdx) {
                 fb.style.color = "var(--danger)";
                 fb.textContent = `Resposta correcta: ${qObj.opts[qObj.ans]}`;
                 sessionState.combo = 0;
+                recordPhonemeResult("Comprensió lectora (PACBAL)", false);
             }
 
             setTimeout(() => {
@@ -2484,189 +2486,150 @@ function switchTeacherTab(tab) {
 
 
 
-let pacbalTimerSeconds = 60;
-let pacbalTimerInterval = null;
-
-function togglePacbalTimer() {
-    const btn = document.getElementById('btn-pacbal-timer-start');
-    if (pacbalTimerInterval) {
-        clearInterval(pacbalTimerInterval);
-        pacbalTimerInterval = null;
-        if (btn) btn.textContent = "▶️ Continua";
-        return;
-    }
-    if (pacbalTimerSeconds <= 0) pacbalTimerSeconds = 60;
-    if (btn) btn.textContent = "⏸️ Pausa";
-    pacbalTimerInterval = setInterval(() => {
-        pacbalTimerSeconds--;
-        updatePacbalTimerDisplay();
-        if (pacbalTimerSeconds <= 0) {
-            clearInterval(pacbalTimerInterval);
-            pacbalTimerInterval = null;
-            if (btn) btn.textContent = "▶️ Inicia 60s";
-            playTone('err');
-            alert("⏱️ Temps exhaurit (1 minut)! Marca l'última paraula o grafia llegida per l'alumne.");
-        }
-    }, 1000);
-}
-
-function resetPacbalTimer() {
-    if (pacbalTimerInterval) {
-        clearInterval(pacbalTimerInterval);
-        pacbalTimerInterval = null;
-    }
-    pacbalTimerSeconds = 60;
-    updatePacbalTimerDisplay();
-    const btn = document.getElementById('btn-pacbal-timer-start');
-    if (btn) btn.textContent = "▶️ Inicia 60s";
-}
-
-function updatePacbalTimerDisplay() {
-    const el = document.getElementById('pacbal-timer-display');
-    if (!el) return;
-    const mins = String(Math.floor(pacbalTimerSeconds / 60)).padStart(2, '0');
-    const secs = String(pacbalTimerSeconds % 60).padStart(2, '0');
-    el.textContent = `${mins}:${secs}`;
-    el.style.color = pacbalTimerSeconds <= 10 ? "var(--danger)" : "var(--text-dark)";
-}
-
 function initPacbalTab() {
-    const sel = document.getElementById('pacbal-student-select');
-    if (!sel) return;
-    const prev = sel.value;
-    sel.innerHTML = "";
-    if (appData.students.length === 0) {
-        sel.innerHTML = `<option value="">(Cap alumne registrat encara)</option>`;
-    } else {
-        appData.students.forEach(st => {
-            sel.innerHTML += `<option value="${st.id}">${st.avatar} ${st.name} (${st.grade})</option>`;
-        });
-        if (prev && appData.students.some(s => s.id === prev)) sel.value = prev;
-    }
-    renderPacbalForm();
-}
-
-function classifyPacbalScore(val, cutoffs) {
-    if (val === "" || val === null || isNaN(val)) {
-        return { label: "Pendent", badge: "badge-blue", color: "var(--text-muted)" };
-    }
-    const num = Number(val);
-    if (num <= cutoffs.risk) {
-        return { label: "🔴 Risc · Intervenció substancial", badge: "badge-red", color: "var(--danger)" };
-    } else if (num <= cutoffs.some) {
-        return { label: "🟠 Algun risc · Intervenció addicional", badge: "badge-amber", color: "#D97706" };
-    } else {
-        return { label: "🟢 Normatiu · Nivell del curs", badge: "badge-green", color: "#059669" };
-    }
-}
-
-function renderPacbalForm() {
-    const periodKey = document.getElementById('pacbal-period-select').value;
-    const cfg = PACBAL_SCREENER_DATA[periodKey];
-    if (!cfg) return;
-
-    const tbody = document.getElementById('pacbal-scores-tbody');
-    tbody.innerHTML = cfg.tests.map(t => `
-        <tr>
-            <td>
-                <strong>${t.name}</strong>
-                <div style="font-size:0.78rem; color:var(--text-muted);">${t.desc}</div>
-            </td>
-            <td style="font-size:0.82rem;">
-                <span style="color:var(--danger); font-weight:700;">Risc: ≤${t.cutoffs.risk}</span> ·
-                <span style="color:#D97706; font-weight:700;">Algun risc: ${t.cutoffs.risk + 1}-${t.cutoffs.some}</span> ·
-                <span style="color:#059669; font-weight:700;">Normatiu: ≥${t.cutoffs.norm}</span>
-            </td>
-            <td style="width:130px;">
-                <input type="number" min="0" max="${t.max}" id="pacbal-inp-${t.id}" class="form-control" style="padding:7px 10px; font-weight:800; text-align:center;" placeholder="0-${t.max}" oninput="recalcPacbalSummary()">
-            </td>
-            <td id="pacbal-res-${t.id}"><span class="badge badge-blue">Introdueix puntuació</span></td>
-        </tr>
-    `).join('');
-
-    recalcPacbalSummary();
-}
-
-function recalcPacbalSummary() {
-    const periodKey = document.getElementById('pacbal-period-select').value;
-    const cfg = PACBAL_SCREENER_DATA[periodKey];
-    if (!cfg) return;
-
-    let sum = 0;
-    let filledCount = 0;
-    cfg.tests.forEach(t => {
-        const inp = document.getElementById('pacbal-inp-' + t.id);
-        const cell = document.getElementById('pacbal-res-' + t.id);
-        if (!inp || !cell) return;
-        const raw = inp.value.trim();
-        const status = classifyPacbalScore(raw, t.cutoffs);
-        cell.innerHTML = `<span class="badge ${status.badge}">${status.label}</span>`;
-        if (raw !== "" && !isNaN(Number(raw))) {
-            sum += Number(raw);
-            filledCount++;
+    const sel = document.getElementById('pacbal-launch-student');
+    if (sel) {
+        const prev = sel.value;
+        sel.innerHTML = "";
+        if (appData.students.length === 0) {
+            sel.innerHTML = `<option value="">(Cap alumne registrat)</option>`;
+        } else {
+            appData.students.forEach(st => {
+                sel.innerHTML += `<option value="${st.id}">${st.avatar} ${st.name} (${st.grade})</option>`;
+            });
+            if (prev && appData.students.some(s => s.id === prev)) sel.value = prev;
         }
-    });
-
-    const sumBox = document.getElementById('pacbal-global-summary');
-    if (filledCount === 0) {
-        sumBox.innerHTML = `<div><strong>Puntuació Global PACBAL (${cfg.label}):</strong> <span style="color:var(--text-muted);">Omple les puntuacions directes per calcular el nivell de suport.</span></div>`;
-        return;
     }
-
-    const gStatus = classifyPacbalScore(sum, cfg.globalCutoffs);
-    sumBox.innerHTML = `
-        <div>
-            <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Resultat Global · ${cfg.label}</div>
-            <div style="font-size:1.35rem; font-weight:800; margin-top:2px;">Suma directa: ${sum} punts <span style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">(Tall normatiu: ≥${cfg.globalCutoffs.norm})</span></div>
-        </div>
-        <div>
-            <span class="badge ${gStatus.badge}" style="font-size:0.95rem; padding:8px 14px;">${gStatus.label}</span>
-        </div>
-    `;
+    renderPacbalResultsDashboard();
 }
 
-function savePacbalScreeningRecord() {
-    const stId = document.getElementById('pacbal-student-select').value;
+function launchFullPacbalPracticeFromPanel() {
+    const stId = document.getElementById('pacbal-launch-student').value;
     const st = appData.students.find(s => s.id === stId);
     if (!st) {
-        alert("Selecciona un alumne per desar els resultats del cribratge PACBAL.");
+        alert("Selecciona un alumne de la llista.");
         return;
     }
-    const periodKey = document.getElementById('pacbal-period-select').value;
-    const cfg = PACBAL_SCREENER_DATA[periodKey];
-    let sum = 0;
-    const details = {};
-    cfg.tests.forEach(t => {
-        const val = Number(document.getElementById('pacbal-inp-' + t.id).value || 0);
-        details[t.id] = val;
-        sum += val;
-    });
-    const gStatus = classifyPacbalScore(sum, cfg.globalCutoffs);
-    if (!Array.isArray(st.pacbalRecords)) st.pacbalRecords = [];
-    st.pacbalRecords.push({
-        date: new Date().toLocaleDateString('ca-ES'),
-        period: cfg.label,
-        scores: details,
-        globalSum: sum,
-        level: gStatus.label
-    });
+    startPacbalPracticeSession(st.id);
+}
 
-    if (details.FLO && details.FLO > 0) {
-        st.sessions.push({
-            date: new Date().toLocaleDateString('ca-ES'),
-            type: "PACBAL " + periodKey,
-            phase: st.phase,
-            accuracy: gStatus.badge === 'badge-green' ? 92 : (gStatus.badge === 'badge-amber' ? 80 : 65),
-            ppm: details.FLO,
-            speed: st.tachSpeed,
-            prosody: gStatus.label
-        });
+function startPacbalPracticeSession(studentId) {
+    const st = appData.students.find(s => s.id === studentId);
+    if (!st) return;
+    currentStudent = st;
+    const phase = st.phase || 1;
+    const steps = [];
+
+    // 1. Principi alfabètic (2 reptes)
+    const alphaPool = [...PACBAL_ALPHABETIC_ITEMS].sort(() => Math.random() - 0.5).slice(0, 2);
+    alphaPool.forEach(item => steps.push({ type: 'pacbal_alphabetic', item, tag: "Principi alfabètic (PACBAL)" }));
+
+    // 2. Segmentació fonèmica (2 reptes)
+    const phonPool = PACBAL_PHONEMIC_DB.filter(x => phase === 1 ? x.phase === 1 : true).sort(() => Math.random() - 0.5).slice(0, 2);
+    phonPool.forEach(item => steps.push({ type: 'pacbal_phonemic', item, tag: "Segmentació fonèmica (PACBAL)" }));
+
+    // 3. Lectura de paraules sense sentit (2 reptes)
+    for (let i = 0; i < 2; i++) {
+        steps.push({ type: 'flash', word: generatePseudoword(phase), tag: "Pseudoparaules (PACBAL)", isPseudo: true });
     }
 
-    saveStorage();
-    renderTeacherDashboard();
-    alert(`✅ Cribratge PACBAL (${cfg.label}) desat al perfil de ${st.name}!
-Resultat global: ${sum} punts (${gStatus.label}).`);
+    // 4. Vocabulari contextualitzat (2 reptes)
+    const vocabPool = PACBAL_VOCAB_DB.filter(v => phase <= 1 ? v.level === 1 : (phase === 2 ? v.level <= 2 : true)).sort(() => Math.random() - 0.5).slice(0, 2);
+    vocabPool.forEach(item => steps.push({ type: 'pacbal_vocab', item, tag: "Vocabulari contextual (PACBAL)" }));
+
+    // 5. Lectura + Comprensió lectora PACBAL
+    const readingsPool = DEFAULT_READINGS[Math.min(5, Math.max(1, phase))];
+    const pacbalReadings = readingsPool.filter(r => r.title.includes("PACBAL"));
+    const chosenPassage = (pacbalReadings.length > 0 ? pacbalReadings : readingsPool)[Math.floor(Math.random() * (pacbalReadings.length > 0 ? pacbalReadings.length : readingsPool.length))];
+    steps.push({ type: 'reading', passage: chosenPassage, tag: "Comprensió lectora (PACBAL)" });
+
+    sessionState = {
+        isScreening: false,
+        steps,
+        currentIndex: 0,
+        correctCount: 0,
+        totalQuestions: 0,
+        currentSpeed: st.tachSpeed,
+        streak: 0,
+        combo: 0,
+        errorQueue: [],
+        inRecoveryMode: false,
+        recoveredCount: 0,
+        initialErrorCount: 0,
+        measuredPPM: PHASES_INFO[phase].expectedPPM,
+        prosodyRating: "Completada"
+    };
+
+    document.getElementById('ses-avatar').textContent = st.avatar;
+    document.getElementById('ses-student-name').textContent = st.name;
+    document.getElementById('ses-phase-badge').textContent = "📊 Pràctica PACBAL";
+    updateComboUI();
+
+    switchView('view-session');
+    renderCurrentStep();
+}
+
+function formatPacbalCell(statObj) {
+    if (!statObj || !statObj.total) {
+        return `<span style="color:var(--text-muted); font-size:0.82rem;">Sense dades</span>`;
+    }
+    const pct = Math.round((statObj.ok / statObj.total) * 100);
+    let badgeCls = "badge-green";
+    let icon = "🟢";
+    if (pct < 60) { badgeCls = "badge-red"; icon = "🔴"; }
+    else if (pct < 80) { badgeCls = "badge-amber"; icon = "🟠"; }
+    return `<span class="badge ${badgeCls}">${icon} ${pct}% (${statObj.ok}/${statObj.total})</span>`;
+}
+
+function renderPacbalResultsDashboard() {
+    const tbody = document.getElementById('pacbal-results-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const filterVal = document.getElementById('pacbal-res-group-filter') ? document.getElementById('pacbal-res-group-filter').value : 'ALL';
+    const list = filterVal === 'ALL' ? appData.students : appData.students.filter(s => s.grade === filterVal);
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">No hi ha alumnes en aquest grup.</td></tr>`;
+        return;
+    }
+
+    list.forEach(st => {
+        const stats = st.phonemeStats || {};
+        const sAlpha = stats["Principi alfabètic (PACBAL)"];
+        const sPhon = stats["Segmentació fonèmica (PACBAL)"];
+        const sPseudo = stats["Pseudoparaules (PACBAL)"] || stats["Pseudoparaules (ruta fonològica)"];
+        const sVocab = stats["Vocabulari contextual (PACBAL)"];
+        const sComp = stats["Comprensió lectora (PACBAL)"];
+
+        const allAvailable = [sAlpha, sPhon, sPseudo, sVocab, sComp].filter(x => x && x.total > 0);
+        let globalHtml = `<span class="badge badge-blue">Pendent pràctica</span>`;
+        if (allAvailable.length > 0) {
+            const totalOk = allAvailable.reduce((acc, x) => acc + x.ok, 0);
+            const totalItems = allAvailable.reduce((acc, x) => acc + x.total, 0);
+            const avgPct = Math.round((totalOk / totalItems) * 100);
+            if (avgPct < 60) {
+                globalHtml = `<span class="badge badge-red">🔴 Risc (${avgPct}%) · Suport intensiu</span>`;
+            } else if (avgPct < 80) {
+                globalHtml = `<span class="badge badge-amber">🟠 Algun risc (${avgPct}%) · Reforç</span>`;
+            } else {
+                globalHtml = `<span class="badge badge-green">🟢 Normatiu (${avgPct}%)</span>`;
+            }
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${st.avatar} ${st.name}</strong></td>
+            <td>${st.grade}</td>
+            <td>${formatPacbalCell(sAlpha)}</td>
+            <td>${formatPacbalCell(sPhon)}</td>
+            <td>${formatPacbalCell(sPseudo)}</td>
+            <td>${formatPacbalCell(sVocab)}</td>
+            <td>${formatPacbalCell(sComp)}</td>
+            <td>${globalHtml}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 function renderPinsManager() {
@@ -3191,7 +3154,7 @@ function startFocusedSession() {
         pool.forEach((item, i) => steps.push({ type: i % 2 === 0 ? 'flash' : 'syllables', word: item.w, syl: item.syl, tag: item.tag }));
     } else if (topic === 'pseudo') {
         for (let i = 0; i < 6; i++) {
-            steps.push({ type: 'flash', word: generatePseudoword(phase), tag: "Pseudoparaules (ruta fonològica)", isPseudo: true });
+            steps.push({ type: 'flash', word: generatePseudoword(phase), tag: "Pseudoparaules (PACBAL)", isPseudo: true });
         }
     } else if (topic === 'chains') {
         const chains = [...CHAIN_WORDS_DB[phase], ...CHAIN_WORDS_DB[Math.min(5, phase + 1)]];
@@ -3206,6 +3169,19 @@ function startFocusedSession() {
     } else if (topic === 'ocular') {
         const pool = LEXICON_DB[phase].sort(() => Math.random() - 0.5).slice(0, 6);
         pool.forEach((item, i) => steps.push({ type: i % 2 === 0 ? 'saccadic' : 'visual_noise', word: item.w, tag: "Gimnàstica ocular" }));
+    } else if (topic === 'pacbal_full') {
+        if (stId !== 'demo') {
+            startPacbalPracticeSession(stId);
+            return;
+        }
+        const aItem = PACBAL_ALPHABETIC_ITEMS[Math.floor(Math.random() * PACBAL_ALPHABETIC_ITEMS.length)];
+        const pItem = PACBAL_PHONEMIC_DB[Math.floor(Math.random() * PACBAL_PHONEMIC_DB.length)];
+        const vItem = PACBAL_VOCAB_DB[Math.floor(Math.random() * PACBAL_VOCAB_DB.length)];
+        steps.push({ type: 'pacbal_alphabetic', item: aItem, tag: "Principi alfabètic (PACBAL)" });
+        steps.push({ type: 'pacbal_phonemic', item: pItem, tag: "Segmentació fonèmica (PACBAL)" });
+        steps.push({ type: 'flash', word: generatePseudoword(phase), tag: "Pseudoparaules (PACBAL)", isPseudo: true });
+        steps.push({ type: 'pacbal_vocab', item: vItem, tag: "Vocabulari contextual (PACBAL)" });
+        steps.push({ type: 'reading', passage: DEFAULT_READINGS[1][0], tag: "Comprensió lectora (PACBAL)" });
     } else if (topic === 'pacbal_alphabetic') {
         const pool = [...PACBAL_ALPHABETIC_ITEMS].sort(() => Math.random() - 0.5).slice(0, 6);
         pool.forEach(item => steps.push({ type: 'pacbal_alphabetic', item, tag: "Principi alfabètic (PACBAL)" }));
