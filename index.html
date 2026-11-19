@@ -937,7 +937,7 @@
 
         <div class="tabs-bar no-print">
             <button class="tab-btn active" id="tab-btn-class" onclick="switchTeacherTab('class')">📋 Seguiment d'aula i gràfiques</button>
-            <button class="tab-btn" id="tab-btn-pacbal" onclick="switchTeacherTab('pacbal')">📊 Cribratge PACBAL</button>
+            <button class="tab-btn" id="tab-btn-pacbal" onclick="switchTeacherTab('pacbal')">📊 Resultats PACBAL</button>
             <button class="tab-btn" id="tab-btn-pins" onclick="switchTeacherTab('pins')">🔑 PINs de l'alumnat</button>
             <button class="tab-btn" id="tab-btn-focus" onclick="switchTeacherTab('focus')">🎯 Entrenament a la carta (AL/PT)</button>
             <button class="tab-btn" id="tab-btn-texts" onclick="switchTeacherTab('texts')">✍️ Textos propis de projecte</button>
@@ -1195,40 +1195,39 @@
         
         <div id="teacher-tab-pacbal" style="display:none;">
             <div class="card" style="margin-bottom: 22px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:18px;">
                     <div>
                         <span class="badge badge-purple" style="margin-bottom:6px;">Escola Estel · Projecte FET</span>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 4px;">📊 Cribratge Oficial PACBAL (P5, 1r i 2n)</h3>
-                        <p style="font-size: 0.88rem; color: var(--text-muted);">Administra les proves cronometrades d'1 minut i obtén a l'instant els punts de tall oficials (Normatiu, Algun risc, Risc).</p>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 4px;">📊 Resultats automàtics de la Pràctica PACBAL</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted);">Cada vegada que un alumne juga als reptes PACBAL (Principi alfabètic, Segmentació fonèmica, Paraules sense sentit, Lectura i Vocabulari), l'aplicació registra automàticament aquí el seu percentatge d'encert i el nivell de suport.</p>
                     </div>
-                    <div style="background: var(--primary-soft); border: 2px solid var(--primary); border-radius: 16px; padding: 12px 18px; text-align: center; min-width: 240px;">
-                        <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary);">⏱️ Cronòmetre oficial (1 minut)</div>
-                        <div id="pacbal-timer-display" style="font-size: 2.3rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-dark); margin: 2px 0;">01:00</div>
-                        <div style="display:flex; gap:6px; justify-content:center;">
-                            <button class="btn btn-primary btn-sm" id="btn-pacbal-timer-start" onclick="togglePacbalTimer()">▶️ Inicia 60s</button>
-                            <button class="btn btn-outline btn-sm" onclick="resetPacbalTimer()">🔄 Reinicia</button>
-                        </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <select id="pacbal-res-group-filter" class="form-control" style="width:auto; padding:8px 12px; font-size:0.86rem;" onchange="renderPacbalResultsDashboard()">
+                            <option value="ALL">🏫 Tots els grups</option>
+                            <option value="1r A">1r A</option>
+                            <option value="1r B">1r B</option>
+                            <option value="2n A">2n A</option>
+                            <option value="2n B">2n B</option>
+                            <option value="3r A">3r A</option>
+                            <option value="3r B">3r B</option>
+                            <option value="4t A">4t A</option>
+                            <option value="4t B">4t B</option>
+                            <option value="5è A">5è A</option>
+                            <option value="5è B">5è B</option>
+                            <option value="6è A">6è A</option>
+                            <option value="6è B">6è B</option>
+                        </select>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                <div style="background: var(--primary-soft); border: 1.5px solid #BFDBFE; border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
-                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Alumne a avaluar</label>
-                        <select id="pacbal-student-select" class="form-control" onchange="renderPacbalForm()"></select>
+                        <strong style="color:var(--primary); font-size:0.95rem;">🎮 Llançar sessió completa de Pràctica PACBAL per a un alumne:</strong>
+                        <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Inclou les 5 activitats pràctiques del PACBAL (Principi alfabètic, Segmentació fonèmica, Paraules sense sentit, Vocabulari contextual i Lectura + Comprensió).</p>
                     </div>
-                    <div>
-                        <label style="display:block; font-size:0.84rem; font-weight:600; margin-bottom:4px;">Curs i Trimestre (Barems oficials)</label>
-                        <select id="pacbal-period-select" class="form-control" onchange="renderPacbalForm()">
-                            <option value="P5_T1">P5 · 1r Trimestre</option>
-                            <option value="P5_T2">P5 · 2n Trimestre</option>
-                            <option value="P5_T3">P5 · 3r Trimestre</option>
-                            <option value="1R_T1" selected>1r Primària · 1r Trimestre</option>
-                            <option value="1R_T2">1r Primària · 2n Trimestre</option>
-                            <option value="1R_T3">1r Primària · 3r Trimestre</option>
-                            <option value="2N_T1">2n Primària · 1r Trimestre</option>
-                            <option value="2N_T2">2n Primària · 2n Trimestre</option>
-                            <option value="2N_T3">2n Primària · 3r Trimestre</option>
-                        </select>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <select id="pacbal-launch-student" class="form-control" style="width:auto; padding:8px 12px; font-size:0.88rem;"></select>
+                        <button class="btn btn-primary btn-sm" onclick="launchFullPacbalPracticeFromPanel()">🚀 Iniciar pràctica PACBAL</button>
                     </div>
                 </div>
 
@@ -1236,20 +1235,18 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Prova / Indicador PACBAL</th>
-                                <th>Punts de tall oficials</th>
-                                <th>Puntuació directa</th>
-                                <th>Nivell i Intervenció</th>
+                                <th>Alumne</th>
+                                <th>Grup</th>
+                                <th>🔤 Principi alfabètic</th>
+                                <th>🔊 Segmentació fonèmica</th>
+                                <th>🛸 Paraules sense sentit</th>
+                                <th>🧠 Vocabulari contextual</th>
+                                <th>💡 Comprensió lectora</th>
+                                <th>Valoració global</th>
                             </tr>
                         </thead>
-                        <tbody id="pacbal-scores-tbody"></tbody>
+                        <tbody id="pacbal-results-tbody"></tbody>
                     </table>
-                </div>
-
-                <div id="pacbal-global-summary" style="margin-top: 18px; padding: 16px; border-radius: 14px; border: 2px solid var(--border); background: var(--bg-main); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;"></div>
-
-                <div style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-                    <button class="btn btn-primary" onclick="savePacbalScreeningRecord()">💾 Desar resultat PACBAL al perfil de l'alumne</button>
                 </div>
             </div>
         </div>
@@ -1318,6 +1315,7 @@
                             <option value="chains">Paraules encadenades (segmentació lèxica)</option>
                             <option value="sentences">Tren de frases (construcció sintàctica)</option>
                             <option value="ocular">Gimnàstica ocular (sacàdics i soroll visual)</option>
+                            <option value="pacbal_full">PACBAL · Circuit pràctic complet (tots els indicadors)</option>
                             <option value="pacbal_alphabetic">PACBAL · Principi alfabètic (grafies i sons)</option>
                             <option value="pacbal_phonemic">PACBAL · Segmentació fonèmica</option>
                             <option value="pacbal_vocab">PACBAL · Vocabulari contextualitzat</option>
@@ -1603,6 +1601,6 @@ alter publication supabase_realtime add table public.escola_grups;</pre>
     </div>
 </div>
 
-<script src="llegeix_mes_escola_app.js"></script>
+<script src="llegeix_mes_escola_v12.js"></script>
 </body>
 </html>
