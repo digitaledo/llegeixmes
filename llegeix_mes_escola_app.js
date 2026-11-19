@@ -744,7 +744,7 @@ function printGroupPins(selectId) {
 
     const cardsHtml = list.map(st => `
         <div style="border:2px solid #2563EB; border-radius:14px; padding:14px; text-align:center; background:#fff; page-break-inside:avoid;">
-            <div style="font-size:0.72rem; font-weight:700; color:#2563EB; text-transform:uppercase;">Llegeix més escola · ${st.grade}</div>
+            <div style="font-size:0.72rem; font-weight:700; color:#2563EB; text-transform:uppercase;">LlegeixMés · ${st.grade}</div>
             <div style="font-size:2rem; margin:4px 0;">${st.avatar}</div>
             <div style="font-size:1.1rem; font-weight:800; color:#0F172A; margin-bottom:8px;">${st.name}</div>
             <div style="background:#EFF6FF; border:1.5px dashed #2563EB; border-radius:10px; padding:8px; font-size:1.45rem; font-weight:800; letter-spacing:0.25em; color:#1D4ED8;">
@@ -2207,7 +2207,7 @@ function openStudentQRCard(studentId) {
 
     const area = document.getElementById('qr-card-area');
     area.innerHTML = `
-        <div style="font-size:0.78rem; font-weight:700; color:var(--primary); text-transform:uppercase;">Llegeix més escola</div>
+        <div style="font-size:0.78rem; font-weight:700; color:var(--primary); text-transform:uppercase;">LlegeixMés</div>
         <div style="font-size:2.4rem; margin:6px 0;">${st.avatar}</div>
         <h4 style="font-size:1.25rem; margin-bottom:2px;">${st.name}</h4>
         <div style="font-size:0.84rem; color:var(--text-muted); margin-bottom:12px;">${st.grade} · Fase ${st.phase}</div>
@@ -2336,7 +2336,7 @@ function decodeQRFromImageFile(event) {
 function importFromQRString() {
     const raw = document.getElementById('inp-qr-code').value.trim();
     if (!raw.startsWith("LMQR:")) {
-        alert("El codi introduït no és un carnet vàlid de Llegeix més escola.");
+        alert("El codi introduït no és un carnet vàlid de LlegeixMés.");
         return;
     }
     try {
