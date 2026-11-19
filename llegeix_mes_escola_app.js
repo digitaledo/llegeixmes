@@ -2296,7 +2296,7 @@ async function startQRCamera() {
             } catch (e) {}
         }, 300);
     } catch (err) {
-        status.textContent = "⚠️ El navegador no permet vídeo directe aquí. Fes servir el botó '📸 Fer foto / imatge QR' o enganxa el codi.";
+        status.textContent = "⚠️ El navegador no permet vídeo directe aquí. Fes servir el botó '📸 Fer foto o imatge QR' o enganxa el codi.";
     }
 }
 
@@ -2405,7 +2405,7 @@ async function verifyPin() {
     }
 
     if (!sbClient) {
-        errEl.textContent = "⚠️ No s'ha pogut connectar amb el servidor d'autenticació. Revisa la connexió a Internet.";
+        errEl.textContent = "⚠️ No s'ha pogut connectar amb el servidor d'autenticació. Revisa la connexió a internet.";
         errEl.style.display = "block";
         return;
     }
@@ -3120,7 +3120,7 @@ function startFocusedSession() {
         isDemo = true;
         st = {
             id: "demo_st",
-            name: "Grup Classe",
+            name: "Grup classe",
             grade: "Primària",
             avatar: "🎓",
             phase: 3,
